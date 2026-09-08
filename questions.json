@@ -1,0 +1,439 @@
+{
+    id: "tf-1",
+    theme: "Transformer Architecture",
+    question: "Explain the Transformer architecture end-to-end.",
+    answer:
+`[Glassdoor confirmed: "Explain transformers in the context of LLMs"]
+
+TODO — key points to hit:
+• Input embeddings + positional encoding
+• Encoder block: Multi-Head Self-Attention → Add & Norm → FFN → Add & Norm
+• Decoder block: Masked MHA → Cross-Attention → FFN (each with residual + LN)
+• Scaled dot-product attention: softmax(QKᵀ / √dₖ) · V
+• Multi-head: h parallel heads with separate W_Q, W_K, W_V projections, concat + W_O
+• Output: linear + softmax over vocab`
+  },
+  {
+    id: "tf-2",
+    theme: "Transformer Architecture",
+    question: "What is scaled dot-product attention? Why do we scale by √dₖ?",
+    answer:
+`TODO — key points:
+• Attention(Q,K,V) = softmax(QKᵀ / √dₖ) · V
+• Without scaling, large dₖ → dot products grow large → softmax saturates → vanishing gradients
+• √dₖ scaling keeps variance of dot products ~1 regardless of dimension`
+  },
+  {
+    id: "tf-3",
+    theme: "Transformer Architecture",
+    question: "What does multi-head attention gain over single-head attention?",
+    answer:
+`TODO — key points:
+• Runs h parallel attention heads each with lower-dimensional projections (dₖ = d_model/h)
+• Allows the model to jointly attend to information from different representation subspaces at different positions
+• Outputs are concatenated then projected: MultiHead(Q,K,V) = Concat(head₁,…,headₕ) W_O`
+  },
+  {
+    id: "tf-4",
+    theme: "Transformer Architecture",
+    question: "How does positional encoding work in the original Transformer? What are modern alternatives?",
+    answer:
+`TODO — key points:
+• Sinusoidal: PE(pos, 2i) = sin(pos / 10000^(2i/d)), PE(pos, 2i+1) = cos(…)
+• Added directly to input embeddings; no learned params
+• Modern alternatives:
+  - Learned absolute PE (BERT, GPT-2)
+  - RoPE (Rotary Position Embedding) — rotates Q/K in complex plane; used in Llama, Mistral
+  - ALiBi — adds linear position bias to attention logits; extrapolates to longer sequences`
+  },
+  {
+    id: "tf-5",
+    theme: "Transformer Architecture",
+    question: "Compare encoder-only, decoder-only, and encoder-decoder Transformers with examples.",
+    answer:
+`TODO — key points:
+• Encoder-only (BERT): bidirectional self-attention, masked language modeling + NSP; good for classification, NER, QA retrieval
+• Decoder-only (GPT, Llama): causal/autoregressive mask; trained on next-token prediction; default for generative LLMs
+• Encoder-decoder (T5, BART, original Transformer): encoder produces context, decoder attends via cross-attention; natural fit for seq2seq (translation, summarization)`
+  },
+
+  // ── LLM Training Pipeline ─────────────────────────────────────────────────
+  {
+    id: "train-1",
+    theme: "LLM Training Pipeline",
+    question: "Walk through the full LLM training pipeline from pretraining to deployment.",
+    answer:
+`[Glassdoor confirmed: "What is the process of training transformers — supervised finetuning, RL involved?"]
+
+TODO — key stages:
+1. Pretraining — next-token prediction on massive web corpus (trillions of tokens)
+2. SFT (Supervised Fine-Tuning) — teacher-forcing on (prompt, demonstration) pairs
+3. Reward Modeling — train RM on human preference pairs (Bradley-Terry model)
+4. RLHF via PPO — maximize E[r(x,y)] − β·KL(π || π_ref), KL prevents reward hacking
+   OR DPO — eliminates explicit RM; direct loss on (prompt, chosen, rejected) triples
+5. Evaluation — benchmarks (MMLU, HumanEval…) + red-teaming + human evals`
+  },
+  {
+    id: "train-2",
+    theme: "LLM Training Pipeline",
+    question: "What is SFT (Supervised Fine-Tuning)? What data and loss does it use?",
+    answer:
+`TODO — key points:
+• Fine-tune pretrained LLM on demonstration data (human-written prompt→response pairs)
+• Loss: cross-entropy on response tokens only (mask out prompt tokens in some implementations)
+• Data sourcing: human contractors writing ideal answers, or distillation from stronger models
+• Purpose: teach instruction-following format; narrows behavior from "predict internet text" to "be a helpful assistant"`
+  },
+  {
+    id: "train-3",
+    theme: "LLM Training Pipeline",
+    question: "Explain RLHF end-to-end. What is the reward model and how is PPO applied?",
+    answer:
+`TODO — key points:
+1. Collect preference data: sample two model outputs for same prompt, human labels which is better
+2. Train reward model r_φ(x,y) with Bradley-Terry loss: log σ(r(x,y_w) − r(x,y_l))
+3. Fine-tune LLM with PPO:
+   • Sample prompt x, generate y ~ π_θ
+   • Score with r_φ; compute advantages
+   • Update θ to maximize E[r(x,y)] − β · KL(π_θ(y|x) || π_ref(y|x))
+   • KL penalty (β) prevents reward hacking / model collapse`
+  },
+  {
+    id: "train-4",
+    theme: "LLM Training Pipeline",
+    question: "What is DPO and how does it differ from RLHF with PPO?",
+    answer:
+`TODO — key points:
+• Direct Preference Optimization (Rafailov et al. 2023) — no explicit reward model, no RL loop
+• Derives closed-form loss from RLHF objective under the optimal policy:
+  L = -E[ log σ( β log(π_θ(y_w|x)/π_ref(y_w|x)) − β log(π_θ(y_l|x)/π_ref(y_l|x)) ) ]
+• Train directly on (prompt, chosen, rejected) triples
+• Advantages: simpler, more stable, same GPU as SFT; no reward hacking
+• Tradeoffs: slightly less flexible, no online data collection`
+  },
+  {
+    id: "train-5",
+    theme: "LLM Training Pipeline",
+    question: "What is LoRA? How does it work and when do you prefer it over full fine-tuning?",
+    answer:
+`TODO — key points:
+• Low-Rank Adaptation: freeze base model, inject ΔW = A·B into weight matrices (A ∈ R^{d×r}, B ∈ R^{r×k}, r << min(d,k))
+• Initialize A ~ N(0,σ), B = 0 so ΔW = 0 at start
+• During forward: h = W₀x + (α/r)·BAx
+• Typical r=8-64; reduces trainable params by 100–1000×
+• Use when: limited GPU memory, multiple task adapters, fast iteration
+• QLoRA: quantize base to 4-bit + LoRA on top; enables fine-tuning 70B on a single A100`
+  },
+
+  {
+    id: "attn-1",
+    theme: "Attention & Efficiency",
+    question: "What is the computational and memory complexity of self-attention? Why is it a bottleneck?",
+    answer:
+`TODO — key points:
+• Time: O(n²·d) — QKᵀ is n×n matrix of dot products, each O(d)
+• Memory: O(n²) — must store full attention matrix for backward pass
+• Bottleneck: quadratic in sequence length; 4K tokens → 16M scores; 100K tokens → 10B scores
+• Motivates FlashAttention, linear attention, sparse attention, state-space models (Mamba)`
+  },
+  {
+    id: "attn-2",
+    theme: "Attention & Efficiency",
+    question: "What is FlashAttention and how does it achieve memory efficiency?",
+    answer:
+`TODO — key points:
+• IO-aware exact attention algorithm (Dao et al. 2022)
+• Never materializes the full n×n attention matrix in HBM (GPU main memory)
+• Tiles Q, K, V into SRAM blocks; fuses softmax + matmul in a single kernel
+• Uses online softmax trick to compute correct result incrementally
+• Memory: O(n) instead of O(n²); same arithmetic as standard attention
+• Speedup: 2–4× on A100 due to reduced memory bandwidth`
+  },
+  {
+    id: "attn-3",
+    theme: "Attention & Efficiency",
+    question: "What is the KV cache? Why is it critical for autoregressive inference?",
+    answer:
+`TODO — key points:
+• During generation, K and V for all past tokens are fixed — no need to recompute
+• Cache K, V tensors per layer; on each new token only compute Q for new position, attend over cached K/V
+• Reduces per-step cost from O(n²) to O(n·d) — each step is linear in context length
+• Memory cost: 2 × n × d_model × n_layers × sizeof(dtype) per sequence
+• E.g., Llama-3 70B with 32K context ≈ ~32GB KV cache in fp16 — often the inference bottleneck`
+  },
+  {
+    id: "attn-4",
+    theme: "Attention & Efficiency",
+    question: "Explain MQA (Multi-Query Attention) and GQA (Grouped Query Attention).",
+    answer:
+`TODO — key points:
+• MHA baseline: h query heads, h key heads, h value heads
+• MQA (Shazeer 2019): 1 K head and 1 V head shared across all h Q heads → KV cache h× smaller; faster inference; slight quality loss
+• GQA (Ainslie et al. 2023): G groups of Q heads share one K/V head; interpolates between MHA (G=h) and MQA (G=1)
+• Used in: Llama 2 (GQA for 70B), Llama 3 (all sizes), Mistral, Gemma`
+  },
+
+  {
+    id: "opt-1",
+    theme: "Optimization",
+    question: "Compare Adam vs AdamW. Why does decoupled weight decay matter?",
+    answer:
+`TODO — key points:
+• Adam applies L2 regularization by adding λ·θ to gradients; effective wd is then scaled by adaptive lr (1/√v̂)
+  → weight decay is larger for parameters with small gradient variance → inconsistent regularization
+• AdamW (Loshchilov & Hutter 2019): decouple weight decay — apply λ·θ directly to weights after gradient update
+  → uniform regularization regardless of adaptive scaling
+• In practice: AdamW consistently outperforms Adam for Transformers`
+  },
+  {
+    id: "opt-2",
+    theme: "Optimization",
+    question: "What is gradient clipping and why is it used in LLM training?",
+    answer:
+`TODO — key points:
+• Global norm clipping: if ||g|| > threshold T, scale g ← g · (T / ||g||)
+• Typical threshold: 1.0
+• Prevents exploding gradients (common in deep networks with long-range dependencies)
+• Does NOT prevent vanishing gradients
+• Important for stability in early training when loss landscape is rough`
+  },
+  {
+    id: "opt-3",
+    theme: "Optimization",
+    question: "Explain mixed-precision training (fp16/bf16). What is a loss scaler and when is it needed?",
+    answer:
+`TODO — key points:
+• Store master weights in fp32; compute forward/backward in fp16 or bf16
+• bf16: same exponent bits as fp32 (8) → larger dynamic range than fp16 (5-bit exp); preferred for training
+• fp16: smaller range → gradients can underflow to zero; needs loss scaling
+• Loss scaler: multiply loss by large constant S before backward; divide gradients by S after; skip update if inf/nan detected
+• bf16 on A100/H100 doesn't need loss scaling; fp16 does`
+  },
+
+  {
+    id: "eval-1",
+    theme: "Evaluation",
+    question: "What is perplexity? What does it measure and what are its limitations?",
+    answer:
+`TODO — key points:
+• PPL = exp( −(1/n) Σ log p(wᵢ | w₁…wᵢ₋₁) ) = exp(cross-entropy loss)
+• Geometric mean inverse probability assigned to each token — lower is better
+• Measures how well the model predicts the test distribution
+• Limitations:
+  - Sensitive to tokenization (can't compare across different tokenizers)
+  - Doesn't measure instruction-following, factuality, or helpfulness
+  - Low PPL ≠ useful model (a fine-tuned model may have higher PPL but be more helpful)`
+  },
+  {
+    id: "eval-2",
+    theme: "Evaluation",
+    question: "What do MMLU, HellaSwag, and HumanEval measure? What are their blind spots?",
+    answer:
+`TODO — key points:
+• MMLU (57 subjects, multiple-choice): world knowledge + reasoning; blind spot: tests can be memorized, MCQ != open generation
+• HellaSwag: commonsense inference via sentence completion (Winograd-style); relatively easy for modern LLMs
+• HumanEval: code generation, measures pass@k (% of problems solved within k samples); blind spot: narrow (Python, algorithmic), not real-world coding
+• General blind spot: benchmarks saturate quickly; contamination risk; don't measure alignment, safety, or long-horizon tasks`
+  },
+
+  {
+    id: "infer-1",
+    theme: "Inference & Decoding",
+    question: "Compare greedy decoding, beam search, top-k sampling, and nucleus (top-p) sampling.",
+    answer:
+`TODO — key points:
+• Greedy: argmax at each step; fast, deterministic; often repetitive/degenerate
+• Beam search: keep top-b sequences at each step; better quality for constrained tasks (translation); not great for open-ended generation (generic outputs)
+• Top-k: sample from top k tokens by probability; fixed k can be too broad (flat dist) or too narrow (peaked dist)
+• Nucleus (top-p): sample from smallest set of tokens whose cumulative probability ≥ p; adapts to distribution sharpness; typical p=0.9–0.95
+• Temperature: divide logits by T before softmax; T>1 flattens (more random), T<1 sharpens (more deterministic)`
+  },
+  {
+    id: "infer-2",
+    theme: "Inference & Decoding",
+    question: "What is speculative decoding and how does it speed up inference without quality loss?",
+    answer:
+`TODO — key points:
+• Problem: large model inference is memory-bandwidth bound at batch size 1 — small draft model is much faster
+• Algorithm:
+  1. Draft model generates k candidate tokens autoregressively (cheap)
+  2. Large model scores all k+1 positions in ONE forward pass (parallelized)
+  3. Accept tokens greedily up to first mismatch using rejection sampling; resample remainder
+• Result: same output distribution as large model alone; typical speedup 2–3×
+• Requires draft and target to share tokenizer; draft must be similar distribution`
+  },
+
+  // ── ML Fundamentals ───────────────────────────────────────────────────────
+  {
+    id: "ml-1",
+    theme: "ML Fundamentals",
+    question: "Explain the bias-variance tradeoff. How does it manifest in neural networks?",
+    answer:
+`TODO — key points:
+• Bias: error from wrong assumptions in the model (underfitting)
+• Variance: error from sensitivity to training data fluctuations (overfitting)
+• Total error ≈ Bias² + Variance + Irreducible noise
+• In neural nets: larger/deeper models → lower bias, higher variance → need more data / regularization
+• Modern observation: overparameterized NNs can interpolate training data yet generalize (double descent)
+• Regularization tools: dropout, weight decay, early stopping, data augmentation`
+  },
+  {
+    id: "ml-2",
+    theme: "ML Fundamentals",
+    question: "What is batch normalization? What problem does it solve and what are its drawbacks?",
+    answer:
+`TODO — key points:
+• Normalizes layer activations to zero mean, unit variance per mini-batch; then learnable scale γ and shift β
+• Solves: internal covariate shift, allows higher learning rates, acts as regularizer
+• Drawbacks: depends on batch size (bad for small batches or online settings); different behavior train vs inference (running stats); doesn't work well for sequence models
+• Alternatives: LayerNorm (used in Transformers) — normalizes across feature dim per sample; independent of batch size`
+  },
+  {
+    id: "ml-3",
+    theme: "ML Fundamentals",
+    question: "What is the vanishing gradient problem and how do residual connections solve it?",
+    answer:
+`TODO — key points:
+• In deep networks, gradients are products of Jacobians through many layers; if values < 1, product → 0 exponentially
+• Residual connection: y = F(x) + x → gradient through shortcut = 1 (additive, not multiplicative)
+• Gradient of loss w.r.t. x = ∂L/∂y · (∂F/∂x + I) — always has I term so gradient can flow
+• Enables training of very deep networks (ResNet, Transformers)
+• Related: LSTM gates address vanishing gradient for RNNs`
+  },
+
+{
+  id: "align-1",
+  theme: "Alignment & RLHF",
+  question: "What is RLAIF and how does it differ from RLHF?",
+  answer:
+`• RLAIF (Constitutional AI / Bai et al. 2022): replace human preference labelers with a strong LLM judge
+- Same pipeline as RLHF: LLM scores (prompt, response A, response B) → reward model → PPO
+- Advantages: scales without human annotation bottleneck; more consistent labeling; cheaper
+- Disadvantages: inherits biases of the judge model; can reward verbose/confident-sounding outputs (verbosity bias)
+- Used in production at Anthropic (Claude) and implicitly in many RLHF pipelines via LLM-as-judge`
+},
+{
+  id: "align-2",
+  theme: "Alignment & RLHF",
+  question: "What are the key tradeoffs between RLHF+PPO, DPO, and RLAIF?",
+  answer:
+`• RLHF+PPO: most flexible; supports online data collection; most complex (separate RM, 4 models in memory); reward hacking risk
+- DPO: eliminates RM and RL loop; trains on offline preference triples; simpler and more stable; no online exploration; slightly less peak quality
+- RLAIF: scales annotation without humans; cheaper; inherits judge-model biases; verbosity/sycophancy risk
+- In practice: DPO is preferred for compute-constrained settings; RLHF+PPO for frontier models where quality ceiling matters; RLAIF for scale`
+},
+
+{
+  id: "opt-4",
+  theme: "Optimization",
+  question: "Compare SGD with momentum vs. Adam. When would you prefer one over the other?",
+  answer:
+`• SGD + momentum: accumulates exponential moving average of gradients (v ← βv + g); overshoots less than vanilla SGD; requires careful LR tuning; generalizes well with long training
+- Adam: maintains per-parameter first moment (m̂) and second moment (v̂); effective LR = α / (√v̂ + ε); adapts to gradient magnitude; converges fast with little tuning
+- Prefer SGD+momentum: image classifiers (ResNet), when generalization gap matters, long training runs with LR schedule
+- Prefer Adam/AdamW: Transformers, NLP, fast prototyping, sparse gradients (embeddings)
+- Key insight: Adam's fast convergence can lead to worse generalization ("sharp minima") — AdamW + cosine schedule partially mitigates this`
+},
+{
+  id: "opt-5",
+  theme: "Optimization",
+  question: "What are common learning rate schedules for LLMs? Why do Transformers need warmup?",
+  answer:
+`• Linear warmup: LR increases from ~0 to peak over first N steps (typically 1–4% of total steps)
+- Cosine decay: after warmup, LR follows cosine curve down to ~0 or small floor
+- Why warmup: at init, Adam's second moment v̂ is near zero → effective LR is very large → unstable updates in early steps; warmup prevents this
+- Without warmup: early gradient steps are noisy and large → loss spikes or divergence
+- Common schedule: warmup 2K steps → cosine decay to 10% of peak LR
+- WSD (Warmup-Stable-Decay) used in Llama 3: stable phase then sharp final decay`
+},
+
+{
+  id: "reg-1",
+  theme: "Regularization",
+  question: "Compare L1 and L2 regularization. What are their effects on weights?",
+  answer:
+`• L2 (weight decay): adds λ||w||² to loss → gradient penalty ∝ w → shrinks all weights proportionally → dense solutions; well-suited for Transformers (AdamW)
+- L1 (Lasso): adds λ||w||₁ → gradient penalty = λ·sign(w) → constant push toward zero regardless of magnitude → induces sparsity; some weights go exactly to zero
+- L1 use cases: feature selection, sparse models
+- L2 use cases: general regularization in deep learning
+- Elastic Net: combination of L1 + L2
+- In practice for LLMs: L2 via AdamW weight decay; L1 rarely used directly`
+},
+{
+  id: "reg-2",
+  theme: "Regularization",
+  question: "How does dropout work? Where is it used in Transformers and why not during inference?",
+  answer:
+`• Randomly zero out each activation with probability p during training; scale remaining by 1/(1-p) (inverted dropout)
+- Effect: prevents co-adaptation of neurons; acts as ensemble of exponentially many subnetworks
+- In Transformers: applied after attention weights, after FFN, after residual addition (varies by impl)
+- Typical p = 0.1 for LLMs (lower than vision models — large LLMs don't need heavy dropout)
+- Inference: disabled (p=0) — all units active; predictions are deterministic and use full capacity
+- Note: dropout hurts performance when data is very large (GPT-3 trained without dropout)`
+},
+{
+  id: "reg-3",
+  theme: "Regularization",
+  question: "What is label smoothing and when is it useful?",
+  answer:
+`• Instead of hard targets (0 or 1), use soft targets: y_smooth = (1-ε)·y_hard + ε/K where K = vocab size
+- Prevents the model from becoming overconfident; reduces log-likelihood of wrong but high-probability predictions
+- Effect: regularizes the output distribution; improves calibration; slight perplexity increase but better downstream
+- Used in: original Transformer (ε=0.1), machine translation, classification
+- Tradeoff: hurts perplexity metric (since PPL assumes hard targets) but improves BLEU / accuracy`
+},
+{
+  id: "reg-4",
+  theme: "Regularization",
+  question: "What is catastrophic forgetting and how is it mitigated during fine-tuning?",
+  answer:
+`• When fine-tuning on new task, model overwrites weights that encoded pretrained knowledge → performance on original tasks degrades
+- Mitigations:
+  - LoRA / PEFT: freeze base weights; only train low-rank adapters → pretrained knowledge preserved by construction
+  - Low LR: small updates → less overwriting
+  - Replay / data mixing: include samples from pretraining distribution in fine-tuning data
+  - EWC (Elastic Weight Consolidation): add penalty for changing weights that were important for previous task (Fisher information)
+  - Prompt tuning / prefix tuning: freeze all weights, only train soft prompt tokens
+- For LLMs in practice: LoRA + data mixing is the standard solution`
+},
+
+{
+  id: "norm-1",
+  theme: "Normalization",
+  question: "Why do Transformers use LayerNorm instead of BatchNorm?",
+  answer:
+`• BatchNorm normalizes across the batch dimension (per feature): requires large batches; different stats at train vs inference; fails for variable-length sequences where padding distorts batch statistics
+- LayerNorm normalizes across the feature dimension (per sample): stats computed per token independently; no batch size dependence; same behavior train and inference
+- For sequences: each token position is one sample → LayerNorm is natural
+- Pre-LN vs Post-LN:
+  - Post-LN (original Transformer): LN after residual; unstable without warmup
+  - Pre-LN (GPT-2, Llama): LN before sublayer (inside residual branch); more stable training; preferred in modern LLMs
+- RMSNorm (Llama 2/3): simplified LN without mean centering — only scales by RMS; slightly faster; empirically matches LN quality`
+},
+
+{
+  id: "grad-1",
+  theme: "ML Fundamentals",
+  question: "What causes exploding gradients and how is it fixed beyond gradient clipping?",
+  answer:
+`• Causes: deep networks without residuals; large weight magnitudes; high LR; poor initialization → gradient product through layers grows exponentially
+- Fixes beyond clipping:
+  - Residual connections: gradient highway through identity shortcut (always has +1 term)
+  - LayerNorm / BatchNorm: normalizes activations → bounds gradient magnitudes
+  - Careful init: Xavier/Glorot (σ² = 2/(fan_in + fan_out)) for tanh; He (σ² = 2/fan_in) for ReLU — keeps variance ~1 through layers
+  - Lower LR + warmup
+  - Gradient clipping (global norm): rescales g if ||g|| > T
+- In Transformers: Pre-LN + residual connections + AdamW largely solves this; clipping (T=1.0) added as safety net`
+},
+{
+  id: "grad-2",
+  theme: "ML Fundamentals",
+  question: "Compare Xavier and He initialization. When do you use each?",
+  answer:
+`• Xavier/Glorot: W ~ U[-√(6/(fan_in+fan_out)), +√(6/(fan_in+fan_out))]
+  → keeps variance ≈ 1 for linear/tanh activations where f'(0) ≈ 1
+- He initialization: W ~ N(0, √(2/fan_in))
+  → accounts for ReLU zeroing half its inputs; variance ≈ 1 after ReLU
+- Rule: tanh/sigmoid → Xavier; ReLU/GeLU → He
+- Transformers: typically use small normal init (σ=0.02) for embedding + attention weights; some impls scale residual branch output by 1/√(2·n_layers)`
+}
