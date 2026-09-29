@@ -244,10 +244,11 @@
     .link-btn svg { width: 16px; height: 16px; }
 
     .question {
-      font-family: var(--font-serif);
-      font-size: 1.75rem;
-      line-height: 1.25;
-      letter-spacing: -0.005em;
+      font-size: 1.35rem;
+      font-weight: 600;
+      line-height: 1.4;
+      letter-spacing: -0.012em;
+      text-wrap: pretty;
     }
     .reported {
       font-size: .85rem;
@@ -332,6 +333,7 @@
       border-radius: 4px; background: var(--surface-2);
     }
     .hint-touch { display: none; }
+    .kbd-hint .nw { white-space: nowrap; }
     @media (hover: none) and (pointer: coarse) {
       .hint-keys { display: none; }
       .hint-touch { display: inline; }
@@ -471,7 +473,7 @@
     @media (max-width: 560px) {
       h1 { font-size: 1.55rem; }
       .card { padding: 20px 18px 18px; gap: 16px; }
-      .question { font-size: 1.45rem; }
+      .question { font-size: 1.2rem; }
       .answer-box { padding: 14px 14px 14px 14px; font-size: .92rem; }
       .btn { padding: 12px 12px; }
       .dlg-body { padding: 22px 20px 20px; }
@@ -542,7 +544,7 @@
     </div>
     <p class="kbd-hint">
       <span class="hint-keys"><kbd>Space</kbd> show answer · <kbd>←</kbd> missed · <kbd>→</kbd> got it · <kbd>S</kbd> skip</span>
-      <span class="hint-touch">Tap the card to show the answer, then swipe → got it · ← missed</span>
+      <span class="hint-touch"><span class="nw">Tap to show the answer</span> · <span class="nw">swipe → got it</span> · <span class="nw">← missed</span></span>
     </p>
   </main>
 
