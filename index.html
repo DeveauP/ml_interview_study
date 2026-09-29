@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ML Interview Prep</title>
+  <meta name="description" content="Spaced-repetition flashcards for ML engineer interviews: fundamentals, transformers, MoE, LLM training and recent frontier models. Runs in your browser.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ML Interview Prep — Quiz App">
+  <meta property="og:description" content="Spaced-repetition flashcards for ML engineer interviews: fundamentals, transformers, MoE, LLM training and recent frontier models. Runs in your browser.">
+  <meta property="og:url" content="https://deveaup.github.io/ml_interview_study/">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2128;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --red: #f85149;
+      --orange: #d29922;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+    }
+
+    header {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.3px; }
+    h1 span { color: var(--accent); }
+
+    .header-right { display: flex; align-items: center; gap: 12px; }
+
+    .stats { display: flex; gap: 8px; }
+
+    .stat {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+    .stat-high  { background: rgba(248,81,73,.12);  color: var(--red);    border: 1px solid rgba(248,81,73,.25); }
+    .stat-med   { background: rgba(210,153,34,.12); color: var(--orange); border: 1px solid rgba(210,153,34,.25); }
+    .stat-low   { background: rgba(63,185,80,.12);  color: var(--green);  border: 1px solid rgba(63,185,80,.25); }
+
+    .reset-btn {
+      font-size: 0.72rem;
+      color: var(--muted);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 9px;
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+    .reset-btn:hover { color: var(--red); border-color: var(--red); }
+
+    /* Theme filters */
+    .filters {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .filter-btn {
+      font-size: 0.72rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      background: rgba(88,166,255,.1);
+      color: var(--accent);
+      border-color: rgba(88,166,255,.3);
+    }
+
+    /* Card */
+    .card {
+      width: 100%;
+      max-width: 720px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 32px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      transition: border-color .2s;
+    }
+
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .theme-tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(88,166,255,.1);
+      color: var(--accent);
+      border: 1px solid rgba(88,166,255,.2);
+    }
+
+    .priority-badge {
+      font-size: 0.72rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--muted);
+    }
+    .priority-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+    }
+
+    .question {
+      font-size: 1.15rem;
+      line-height: 1.65;
+      font-weight: 500;
+    }
+
+    /* Answer */
+    .answer-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 8px;
+      padding: 18px 20px;
+      font-size: 0.88rem;
+      line-height: 1.75;
+      color: #c9d1d9;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .answer-box code {
+      background: rgba(255,255,255,.07);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+      font-size: .85em;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 11px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      transition: all .15s;
+    }
+
+    .btn-reveal {
+      background: var(--accent);
+      color: #0d1117;
+      width: 100%;
+    }
+    .btn-reveal:hover { background: #79c0ff; }
+
+    .assess-row { display: flex; gap: 10px; }
+
+    .btn-correct {
+      flex: 1;
+      background: rgba(63,185,80,.12);
+      color: var(--green);
+      border: 1px solid rgba(63,185,80,.35);
+    }
+    .btn-correct:hover { background: rgba(63,185,80,.22); }
+
+    .btn-wrong {
+      flex: 1;
+      background: rgba(248,81,73,.12);
+      color: var(--red);
+      border: 1px solid rgba(248,81,73,.35);
+    }
+    .btn-wrong:hover { background: rgba(248,81,73,.22); }
+
+    .btn-skip {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 11px 16px;
+    }
+    .btn-skip:hover { color: var(--text); border-color: var(--muted); }
+
+    /* Progress bar */
+    .progress-wrap { width: 100%; max-width: 720px; margin-top: 14px; }
+    .progress-track {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      display: flex;
+    }
+    .prog-seg { height: 100%; transition: width .5s ease; }
+    .seg-low    { background: var(--green); }
+    .seg-medium { background: var(--orange); }
+    .seg-high   { background: var(--red); }
+
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .hidden { display: none !important; }
+
+    @keyframes fadein {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fadein { animation: fadein .25s ease; }
+
+    @keyframes flash-green { 50% { border-color: var(--green); } }
+    @keyframes flash-red   { 50% { border-color: var(--red);   } }
+    .flash-correct { animation: flash-green .4s ease; }
+    .flash-wrong   { animation: flash-red   .4s ease; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>ML Interview <span>Prep</span></h1>
+  <div class="header-right">
+    <div class="stats">
+      <span class="stat stat-high"  id="stat-high">— high</span>
+      <span class="stat stat-med"   id="stat-med">— med</span>
+      <span class="stat stat-low"   id="stat-low">— low</span>
+    </div>
+    <button class="reset-btn" onclick="confirmReset()">reset</button>
+  </div>
+</header>
+
+<div class="filters" id="filters"></div>
+
+<div class="card" id="card">
+  <div class="card-meta">
+    <span class="theme-tag"     id="card-theme">—</span>
+    <span class="priority-badge">
+      <span class="priority-dot" id="prio-dot"></span>
+      <span                      id="prio-label">—</span>
+    </span>
+  </div>
+
+  <div class="question fadein" id="question-text">Loading…</div>
+
+  <div class="answer-box hidden fadein" id="answer-box"></div>
+
+  <div id="action-reveal">
+    <button class="btn btn-reveal" onclick="revealAnswer()">Show Answer</button>
+  </div>
+
+  <div class="assess-row hidden" id="action-assess">
+    <button class="btn btn-wrong"   onclick="assess(false)">✗ Missed it</button>
+    <button class="btn btn-correct" onclick="assess(true)">✓ Got it</button>
+    <button class="btn btn-skip"    onclick="nextQuestion()">Skip</button>
+  </div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-track">
+    <div class="prog-seg seg-low"    id="prog-low"    style="width:0%"></div>
+    <div class="prog-seg seg-medium" id="prog-medium" style="width:0%"></div>
+    <div class="prog-seg seg-high"   id="prog-high"   style="width:100%"></div>
+  </div>
+  <div class="progress-labels">
+    <span id="session-label">Session: 0 answered</span>
+    <span id="streak-label">Streak: 0 🔥</span>
+  </div>
+</div>
+
+<script src="questions.js"></script>
+<script>
+
+// ─────────────────────────────────────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────────────────────────────────────
+const STORAGE_KEY = "ml-quiz-v1";
+let progress       = {};   // id → { cc: number }  (cc = consecutiveCorrect)
+let activeThemes   = new Set();
+let currentQ       = null;
+let sessionAnswered = 0;
+let sessionStreak   = 0;
+
+function loadProgress() {
+  try { progress = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+  catch { progress = {}; }
+}
+function saveProgress() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+}
+
+function cc(id)   { return progress[id]?.cc ?? 0; }
+function freq(id) { const c = cc(id); return c >= 3 ? "low" : c >= 1 ? "medium" : "high"; }
+function weight(id) { return { high: 10, medium: 3, low: 1 }[freq(id)]; }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sampling
+// ─────────────────────────────────────────────────────────────────────────────
+function sampleQuestion(exclude) {
+  let pool = QUESTIONS.filter(q =>
+    activeThemes.size === 0 || activeThemes.has(q.theme)
+  );
+  if (pool.length === 0) return null;
+  // Avoid repeating same card if alternatives exist
+  const alt = pool.filter(q => q.id !== exclude);
+  if (alt.length > 0) pool = alt;
+
+  const weights = pool.map(q => weight(q.id));
+  const total   = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < pool.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return pool[i];
+  }
+  return pool[pool.length - 1];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UI helpers
+// ─────────────────────────────────────────────────────────────────────────────
+const PRIO_STYLE = {
+  high:   { color: "var(--red)",    label: "high priority"   },
+  medium: { color: "var(--orange)", label: "medium priority" },
+  low:    { color: "var(--green)",  label: "mastered"        },
+};
+
+function updateStats() {
+  const counts = { high: 0, medium: 0, low: 0 };
+  QUESTIONS.forEach(q => counts[freq(q.id)]++);
+  document.getElementById("stat-high").textContent = `${counts.high} high`;
+  document.getElementById("stat-med").textContent  = `${counts.medium} med`;
+  document.getElementById("stat-low").textContent  = `${counts.low} low`;
+
+  const n = QUESTIONS.length;
+  document.getElementById("prog-low").style.width    = `${counts.low    / n * 100}%`;
+  document.getElementById("prog-medium").style.width = `${counts.medium / n * 100}%`;
+  document.getElementById("prog-high").style.width   = `${counts.high   / n * 100}%`;
+}
+
+function showQuestion(q) {
+  currentQ = q;
+  const f  = freq(q.id);
+  const ps = PRIO_STYLE[f];
+
+  document.getElementById("card-theme").textContent    = q.theme;
+  document.getElementById("question-text").textContent = q.question;
+  document.getElementById("answer-box").textContent    = q.answer;
+  document.getElementById("prio-dot").style.background = ps.color;
+  document.getElementById("prio-label").textContent    = ps.label;
+
+  document.getElementById("answer-box").classList.add("hidden");
+  document.getElementById("action-reveal").classList.remove("hidden");
+  document.getElementById("action-assess").classList.add("hidden");
+
+  // Restart fadein animation
+  const qt = document.getElementById("question-text");
+  qt.classList.remove("fadein");
+  void qt.offsetWidth;
+  qt.classList.add("fadein");
+}
+
+function revealAnswer() {
+  const box = document.getElementById("answer-box");
+  box.classList.remove("hidden");
+  box.classList.remove("fadein");
+  void box.offsetWidth;
+  box.classList.add("fadein");
+  document.getElementById("action-reveal").classList.add("hidden");
+  document.getElementById("action-assess").classList.remove("hidden");
+}
+
+function assess(correct) {
+  if (!currentQ) return;
+  const id  = currentQ.id;
+  const prev = progress[id]?.cc ?? 0;
+  progress[id] = { cc: correct ? prev + 1 : 0 };
+
+  sessionAnswered++;
+  sessionStreak = correct ? sessionStreak + 1 : 0;
+  saveProgress();
+  updateStats();
+
+  document.getElementById("session-label").textContent = `Session: ${sessionAnswered} answered`;
+  document.getElementById("streak-label").textContent  = `Streak: ${sessionStreak} 🔥`;
+
+  // Flash card border
+  const card = document.getElementById("card");
+  card.classList.remove("flash-correct", "flash-wrong");
+  void card.offsetWidth;
+  card.classList.add(correct ? "flash-correct" : "flash-wrong");
+
+  nextQuestion();
+}
+
+function nextQuestion() {
+  const next = sampleQuestion(currentQ?.id);
+  if (next) showQuestion(next);
+}
+
+function confirmReset() {
+  if (confirm("Reset all progress? This cannot be undone.")) {
+    progress = {};
+    saveProgress();
+    sessionAnswered = 0;
+    sessionStreak   = 0;
+    document.getElementById("session-label").textContent = "Session: 0 answered";
+    document.getElementById("streak-label").textContent  = "Streak: 0 🔥";
+    updateStats();
+    showQuestion(sampleQuestion(null));
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Theme filters
+// ─────────────────────────────────────────────────────────────────────────────
+function buildFilters() {
+  const themes    = [...new Set(QUESTIONS.map(q => q.theme))];
+  const container = document.getElementById("filters");
+
+  const allBtn = document.createElement("button");
+  allBtn.className   = "filter-btn active";
+  allBtn.textContent = "All";
+  allBtn.onclick     = () => {
+    activeThemes.clear();
+    container.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    allBtn.classList.add("active");
+    showQuestion(sampleQuestion(currentQ?.id));
+  };
+  container.appendChild(allBtn);
+
+  themes.forEach(theme => {
+    const btn        = document.createElement("button");
+    btn.className    = "filter-btn";
+    btn.textContent  = theme;
+    btn.onclick      = () => {
+      if (activeThemes.has(theme)) {
+        activeThemes.delete(theme);
+        btn.classList.remove("active");
+      } else {
+        activeThemes.add(theme);
+        btn.classList.add("active");
+        allBtn.classList.remove("active");
+      }
+      if (activeThemes.size === 0) allBtn.classList.add("active");
+      const next = sampleQuestion(currentQ?.id);
+      if (next) showQuestion(next);
+    };
+    container.appendChild(btn);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────────────────────────────────────
+loadProgress();
+buildFilters();
+updateStats();
+showQuestion(sampleQuestion(null));
+</script>
+</body>
+</html>

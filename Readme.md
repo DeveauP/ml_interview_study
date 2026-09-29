@@ -1,11 +1,21 @@
 # ML Interview Prep — Quiz App
 
-A single-file flashcard quiz for ML interview prep, with spaced-repetition-style
+### ▶ [Play it in your browser](https://deveaup.github.io/ml_interview_study/)
+
+A flashcard quiz for ML engineer interview prep, with spaced-repetition-style
 weighting so the questions you keep getting wrong show up more often.
+
+74 questions across 18 themes: ML fundamentals, optimization, regularization,
+the Transformer, attention efficiency, MoE, the LLM training pipeline,
+alignment & RLHF, inference, evaluation, and recent frontier models
+(Gemma 3 / 4, Llama 4, DeepSeek V3 / R1, Kimi K2 / K2.5).
+
+Nothing to install and no account: it runs entirely in the browser.
 
 ## How to use it
 
-1. Open `ml-quiz.html` in any browser (just double-click it — no server needed).
+1. Open the [live version](https://deveaup.github.io/ml_interview_study/), or
+   clone the repo and open `index.html` in any browser (no server needed).
 2. Read the question, then click **Show Answer** to reveal it.
 3. Mark yourself honestly:
    - **✓ Got it** — you knew the answer.
@@ -41,7 +51,23 @@ back to "high" priority, no matter how many times you'd gotten it right before.
 
 ## Files
 
-- `ml-quiz.html` — the app (structure, styling, and all quiz logic in one file).
+- `index.html` — the app (structure, styling, and all quiz logic in one file).
+- `ml-quiz.html` — redirect to `index.html`, kept so old links still work.
 - `questions.js` — the live question bank loaded by the app (`QUESTIONS` array), grouped by theme.
-- `questions.json` — a draft/scratch copy of the question bank with `TODO` placeholder answers; not loaded by the app.
+- `drafts/questions.json` — a draft/scratch copy of the question bank with `TODO` placeholder answers; not loaded by the app.
 - `transformer_diagram.md` — supplementary notes/diagram on the Transformer architecture.
+
+## Adding questions
+
+Questions live in `questions.js` as plain objects:
+
+```js
+{
+  id: "tf-7",                        // unique; prefix by theme
+  theme: "Transformer Architecture", // becomes a filter button
+  question: "…",
+  answer: `…`                        // template string, shown as-is
+},
+```
+
+Progress is keyed by `id`, so keep existing ids stable when editing.
