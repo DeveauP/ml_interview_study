@@ -5,327 +5,686 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ML Interview Prep</title>
   <meta name="description" content="Spaced-repetition flashcards for ML engineer interviews: fundamentals, transformers, MoE, LLM training and recent frontier models. Runs in your browser.">
+  <meta name="author" content="Paul Deveau">
   <meta property="og:type" content="website">
   <meta property="og:title" content="ML Interview Prep — Quiz App">
   <meta property="og:description" content="Spaced-repetition flashcards for ML engineer interviews: fundamentals, transformers, MoE, LLM training and recent frontier models. Runs in your browser.">
   <meta property="og:url" content="https://deveaup.github.io/ml_interview_study/">
+  <meta property="og:image" content="https://deveaup.github.io/ml_interview_study/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="627">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400..700&display=swap">
+  <script>
+    // Apply the saved theme before first paint to avoid a flash.
+    try {
+      const t = localStorage.getItem("ml-quiz-theme");
+      if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+    } catch {}
+  </script>
   <style>
+    /* Palette and type follow deveaup.github.io. */
     :root {
-      --bg: #0d1117;
-      --surface: #161b22;
-      --surface2: #1c2128;
-      --border: #30363d;
-      --text: #e6edf3;
-      --muted: #8b949e;
-      --accent: #58a6ff;
-      --green: #3fb950;
-      --red: #f85149;
-      --orange: #d29922;
+      --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --font-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+      --font-math: 'Cambria Math', 'STIX Two Math', 'Noto Sans Math', 'Latin Modern Math', serif;
+
+      --bg: #f7f5f0;
+      --surface: #ffffff;
+      --surface-2: #efece4;
+      --text: #1c1b18;
+      --muted: #6a665c;
+      --line: #e2ddd2;
+      --accent: #2a52be;
+      --accent-soft: #e3e9fb;
+      --accent-contrast: #ffffff;
+
+      --learn: #b42318;       --learn-soft: #fbe9e7;
+      --learning: #b45309;    --learning-soft: #fdf0e1;
+      --mastered: #15803d;    --mastered-soft: #e3f4e8;
+
+      --radius: 10px;
+      --maxw: 800px;
+      --shadow: 0 1px 2px rgba(28,27,24,.04), 0 8px 24px rgba(28,27,24,.06);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #131210;
+        --surface: #1c1b18;
+        --surface-2: #26241f;
+        --text: #ece8de;
+        --muted: #a29d90;
+        --line: #34312a;
+        --accent: #8ea9ff;
+        --accent-soft: #232b45;
+        --accent-contrast: #0e1426;
+        --learn: #ff8a7a;     --learn-soft: #3a211d;
+        --learning: #f59e0b;  --learning-soft: #3a2c14;
+        --mastered: #4ade80;  --mastered-soft: #1c3324;
+        --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #131210;
+      --surface: #1c1b18;
+      --surface-2: #26241f;
+      --text: #ece8de;
+      --muted: #a29d90;
+      --line: #34312a;
+      --accent: #8ea9ff;
+      --accent-soft: #232b45;
+      --accent-contrast: #0e1426;
+      --learn: #ff8a7a;     --learn-soft: #3a211d;
+      --learning: #f59e0b;  --learning-soft: #3a2c14;
+      --mastered: #4ade80;  --mastered-soft: #1c3324;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      margin: 0;
       background: var(--bg);
       color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px 16px 48px;
+      padding: 20px 16px 32px;
     }
+    h1, h2, h3, p, ul, ol { margin: 0; }
+    button { font: inherit; color: inherit; }
+    a { color: var(--accent); }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+    .wrap { width: 100%; max-width: var(--maxw); }
+    .hidden { display: none !important; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
+    /* ── Header ─────────────────────────────────────────────────────────── */
     header {
-      width: 100%;
-      max-width: 720px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      gap: 12px;
+      margin-bottom: 14px;
     }
-
-    h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.3px; }
-    h1 span { color: var(--accent); }
-
-    .header-right { display: flex; align-items: center; gap: 12px; }
-
-    .stats { display: flex; gap: 8px; }
-
-    .stat {
-      font-size: 0.72rem;
-      font-weight: 600;
-      padding: 3px 9px;
-      border-radius: 20px;
+    h1 {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: 1.9rem;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
     }
-    .stat-high  { background: rgba(248,81,73,.12);  color: var(--red);    border: 1px solid rgba(248,81,73,.25); }
-    .stat-med   { background: rgba(210,153,34,.12); color: var(--orange); border: 1px solid rgba(210,153,34,.25); }
-    .stat-low   { background: rgba(63,185,80,.12);  color: var(--green);  border: 1px solid rgba(63,185,80,.25); }
-
-    .reset-btn {
-      font-size: 0.72rem;
+    h1 em { color: var(--accent); }
+    .top-actions { display: flex; align-items: center; gap: 6px; }
+    .icon-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: var(--surface);
       color: var(--muted);
-      background: none;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 3px 9px;
       cursor: pointer;
       transition: color .15s, border-color .15s;
     }
-    .reset-btn:hover { color: var(--red); border-color: var(--red); }
-
-    /* Theme filters */
-    .filters {
-      width: 100%;
-      max-width: 720px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 16px;
-    }
-
-    .filter-btn {
-      font-size: 0.72rem;
-      padding: 4px 12px;
-      border-radius: 20px;
-      background: transparent;
-      color: var(--muted);
-      border: 1px solid var(--border);
-      cursor: pointer;
-      transition: all .15s;
-    }
-    .filter-btn:hover, .filter-btn.active {
-      background: rgba(88,166,255,.1);
-      color: var(--accent);
-      border-color: rgba(88,166,255,.3);
-    }
-
-    /* Card */
-    .card {
-      width: 100%;
-      max-width: 720px;
+    .icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .icon-btn svg { width: 18px; height: 18px; }
+    .streak {
+      font-size: .85rem; font-weight: 600;
+      padding: 5px 11px;
+      border-radius: 999px;
       background: var(--surface);
-      border: 1px solid var(--border);
+      border: 1px solid var(--line);
+      font-variant-numeric: tabular-nums;
+    }
+    .streak.bump { animation: bump .35s ease; }
+    @keyframes bump { 50% { transform: scale(1.18); } }
+
+    /* ── Status chips ───────────────────────────────────────────────────── */
+    .stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .stat {
+      font-size: .78rem; font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-learn    { background: var(--surface-2);     color: var(--muted); }
+    .stat-learning { background: var(--learning-soft); color: var(--learning); }
+    .stat-mastered { background: var(--mastered-soft); color: var(--mastered); }
+
+    /* ── Filters ────────────────────────────────────────────────────────── */
+    .filters { margin-bottom: 14px; }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      font-size: .82rem;
+      padding: 5px 13px;
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--line);
+      cursor: pointer;
+      transition: color .15s, border-color .15s, background .15s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .chip:hover { color: var(--text); border-color: var(--muted); }
+    .chip.active, .chip[aria-pressed="true"] {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .chip[aria-expanded="true"] { color: var(--text); border-color: var(--text); }
+    .chip .caret { width: 10px; height: 10px; transition: transform .15s; }
+    .chip[aria-expanded="true"] .caret { transform: rotate(180deg); }
+    .chip .count {
+      font-size: .7rem; font-weight: 700;
+      min-width: 18px; padding: 0 5px;
+      border-radius: 999px;
+      background: var(--accent); color: var(--accent-contrast);
+      text-align: center;
+    }
+    .theme-panel {
+      margin-top: 8px;
+      padding: 10px;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+    }
+
+    /* ── Card ───────────────────────────────────────────────────────────── */
+    .card {
+      position: relative;
+      min-width: 0;
+      background: var(--surface);
+      border: 1px solid var(--line);
       border-radius: 14px;
-      padding: 28px 32px 24px;
+      box-shadow: var(--shadow);
+      padding: 26px 30px 22px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 18px;
+      touch-action: pan-y;
       transition: border-color .2s;
     }
-
-    .card-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
+    .card.dragging { transition: none; }
+    .card.snap { transition: transform .2s ease, border-color .2s; }
+    .card.swipe-right { border-color: var(--mastered); }
+    .card.swipe-left  { border-color: var(--learn); }
+    .card-meta { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .card-meta-left { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex: 1; min-width: 0; }
     .theme-tag {
-      font-size: 0.72rem;
-      font-weight: 600;
+      font-size: .75rem; font-weight: 600;
       padding: 3px 10px;
-      border-radius: 20px;
-      background: rgba(88,166,255,.1);
+      border-radius: 999px;
+      background: var(--accent-soft);
       color: var(--accent);
-      border: 1px solid rgba(88,166,255,.2);
     }
-
-    .priority-badge {
-      font-size: 0.72rem;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      color: var(--muted);
+    .source-badge {
+      font-size: .75rem; font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--text);
     }
-    .priority-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
+    .card-meta-right { display: flex; align-items: center; gap: 4px; flex: none; margin-top: -3px; }
+    .priority-badge { font-size: .78rem; color: var(--muted); display: inline-flex; align-items: center; gap: 5px; }
+    .priority-badge .shape { font-size: .9rem; line-height: 1; }
+    .link-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px;
+      border: none; background: none; border-radius: 50%;
+      color: var(--muted); cursor: pointer;
     }
+    .link-btn:hover { color: var(--accent); background: var(--accent-soft); }
+    .link-btn svg { width: 16px; height: 16px; }
 
     .question {
-      font-size: 1.15rem;
-      line-height: 1.65;
-      font-weight: 500;
+      font-family: var(--font-serif);
+      font-size: 1.75rem;
+      line-height: 1.25;
+      letter-spacing: -0.005em;
+    }
+    .reported {
+      font-size: .85rem;
+      color: var(--muted);
+      margin-top: -8px;
     }
 
     /* Answer */
     .answer-box {
-      background: var(--surface2);
-      border: 1px solid var(--border);
+      background: var(--surface-2);
+      border-radius: var(--radius);
       border-left: 3px solid var(--accent);
+      padding: 16px 20px 16px 18px;
+      font-size: .95rem;
+      line-height: 1.65;
+      overflow-wrap: anywhere;
+    }
+    .answer-box ul, .answer-box ol { padding-left: 1.25em; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+    .answer-box ul ul, .answer-box ol ul, .answer-box ul ol, .answer-box ol ol { margin-top: 6px; gap: 4px; }
+    .answer-box > ul + ul, .answer-box > ol + ul, .answer-box > ul + ol, .answer-box > ol + ol,
+    .answer-box > p + ul, .answer-box > ul + p { margin-top: 6px; }
+    .answer-box ul { list-style: none; }
+    .answer-box ul > li { position: relative; }
+    .answer-box ul > li::before {
+      content: "";
+      position: absolute; left: -1em; top: .62em;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+    }
+    .answer-box ul ul > li::before { background: none; border: 1.5px solid var(--muted); width: 5px; height: 5px; }
+    .answer-box ol > li::marker { color: var(--accent); font-weight: 700; }
+    .answer-box strong { font-weight: 650; }
+    .answer-box sub, .answer-box sup, .question sub, .question sup { font-size: .72em; line-height: 0; }
+    .answer-box .note { color: var(--muted); margin-top: 2px; }
+    .answer-box .formula {
+      font-family: var(--font-math);
+      font-size: 1.02rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 18px 20px;
-      font-size: 0.88rem;
-      line-height: 1.75;
-      color: #c9d1d9;
-      white-space: pre-wrap;
-      word-break: break-word;
+      padding: 8px 12px;
+      margin: 6px 0 2px;
+      overflow-x: auto;
+      white-space: nowrap;
     }
-
-    .answer-box code {
-      background: rgba(255,255,255,.07);
-      padding: 1px 5px;
-      border-radius: 4px;
-      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
-      font-size: .85em;
+    .diagram-btn {
+      margin-top: 12px;
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: .85rem; font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      background: var(--surface);
+      color: var(--accent);
+      cursor: pointer;
     }
+    .diagram-btn:hover { background: var(--accent-soft); }
+    .diagram-btn svg { width: 16px; height: 16px; }
 
     /* Buttons */
     .btn {
-      padding: 11px 20px;
-      border-radius: 8px;
-      border: none;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      border: 1px solid transparent;
       cursor: pointer;
-      font-size: 0.88rem;
+      font-size: .92rem;
       font-weight: 600;
-      transition: all .15s;
+      transition: background .15s, border-color .15s, color .15s;
     }
-
-    .btn-reveal {
-      background: var(--accent);
-      color: #0d1117;
-      width: 100%;
-    }
-    .btn-reveal:hover { background: #79c0ff; }
-
+    .btn-reveal { background: var(--accent); color: var(--accent-contrast); width: 100%; }
+    .btn-reveal:hover { filter: brightness(1.08); }
     .assess-row { display: flex; gap: 10px; }
-
-    .btn-correct {
-      flex: 1;
-      background: rgba(63,185,80,.12);
-      color: var(--green);
-      border: 1px solid rgba(63,185,80,.35);
-    }
-    .btn-correct:hover { background: rgba(63,185,80,.22); }
-
-    .btn-wrong {
-      flex: 1;
-      background: rgba(248,81,73,.12);
-      color: var(--red);
-      border: 1px solid rgba(248,81,73,.35);
-    }
-    .btn-wrong:hover { background: rgba(248,81,73,.22); }
-
-    .btn-skip {
-      background: transparent;
-      color: var(--muted);
-      border: 1px solid var(--border);
-      padding: 11px 16px;
-    }
+    .btn-wrong   { flex: 1; background: var(--learn-soft);    color: var(--learn);    border-color: var(--learn); }
+    .btn-correct { flex: 1; background: var(--mastered-soft); color: var(--mastered); border-color: var(--mastered); }
+    .btn-wrong:hover, .btn-correct:hover { filter: brightness(.97); }
+    .btn-skip { background: transparent; color: var(--muted); border-color: var(--line); padding: 12px 16px; }
     .btn-skip:hover { color: var(--text); border-color: var(--muted); }
+    .kbd-hint { font-size: .75rem; color: var(--muted); text-align: center; margin-top: -8px; }
+    .kbd-hint kbd {
+      font-family: var(--font-sans); font-size: .72rem;
+      padding: 0 5px; border: 1px solid var(--line); border-bottom-width: 2px;
+      border-radius: 4px; background: var(--surface-2);
+    }
+    .hint-touch { display: none; }
+    @media (hover: none) and (pointer: coarse) {
+      .hint-keys { display: none; }
+      .hint-touch { display: inline; }
+    }
 
-    /* Progress bar */
-    .progress-wrap { width: 100%; max-width: 720px; margin-top: 14px; }
+    /* ── Progress bar ───────────────────────────────────────────────────── */
+    .progress-wrap { margin-top: 16px; }
     .progress-track {
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
+      height: 6px;
+      background: var(--line);
+      border-radius: 3px;
       overflow: hidden;
       display: flex;
     }
     .prog-seg { height: 100%; transition: width .5s ease; }
-    .seg-low    { background: var(--green); }
-    .seg-medium { background: var(--orange); }
-    .seg-high   { background: var(--red); }
-
+    .seg-mastered { background: var(--mastered); }
+    .seg-learning { background: var(--learning); }
+    .seg-learn    { background: transparent; }
     .progress-labels {
-      display: flex;
-      justify-content: space-between;
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px;
       margin-top: 8px;
-      font-size: 0.72rem;
+      font-size: .78rem;
       color: var(--muted);
     }
 
-    .hidden { display: none !important; }
-
-    @keyframes fadein {
-      from { opacity: 0; transform: translateY(6px); }
-      to   { opacity: 1; transform: translateY(0); }
+    /* ── Footer ─────────────────────────────────────────────────────────── */
+    footer {
+      margin-top: 36px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 20px;
+      font-size: .85rem;
+      color: var(--muted);
     }
-    .fadein { animation: fadein .25s ease; }
+    footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+    footer a { color: var(--text); text-decoration: none; font-weight: 500; }
+    footer a:hover { color: var(--accent); text-decoration: underline; }
 
-    @keyframes flash-green { 50% { border-color: var(--green); } }
-    @keyframes flash-red   { 50% { border-color: var(--red);   } }
+    /* ── Dialogs ────────────────────────────────────────────────────────── */
+    dialog {
+      width: min(560px, calc(100vw - 32px));
+      max-height: calc(100vh - 48px);
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 24px 64px rgba(0,0,0,.25);
+    }
+    dialog::backdrop { background: rgba(19,18,16,.55); }
+    .dlg-body { padding: 26px 28px 24px; display: flex; flex-direction: column; gap: 14px; }
+    .dlg-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+    .dlg-title { font-family: var(--font-serif); font-weight: 400; font-size: 2rem; line-height: 1.1; }
+    .dlg-close { flex: none; }
+    .lead { font-size: 1.05rem; }
+    .steps { padding-left: 1.3em; display: grid; gap: 6px; }
+    .steps li::marker { color: var(--accent); font-weight: 700; }
+    .fine { font-size: .82rem; color: var(--muted); }
+    .dlg-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .btn-primary { background: var(--accent); color: var(--accent-contrast); }
+    .btn-primary:hover { filter: brightness(1.08); }
+    .btn-ghost { background: transparent; border-color: var(--line); color: var(--text); }
+    .btn-ghost:hover { border-color: var(--muted); }
+    .btn-danger { background: transparent; border-color: transparent; color: var(--learn); padding-left: 4px; padding-right: 4px; }
+    .btn-danger:hover { text-decoration: underline; }
+
+    /* Progress dialog */
+    .big-number { font-family: var(--font-serif); font-size: 3.2rem; line-height: 1; }
+    .big-number small { font-family: var(--font-sans); font-size: 1rem; color: var(--muted); margin-left: 6px; }
+    .group-list { display: grid; gap: 14px; }
+    .group-row h3 { font-size: .9rem; font-weight: 600; display: flex; justify-content: space-between; margin-bottom: 5px; }
+    .group-row h3 span { color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+    .theme-lines { display: grid; gap: 2px; margin-top: 6px; font-size: .8rem; color: var(--muted); }
+    .theme-lines div { display: flex; justify-content: space-between; gap: 12px; }
+    .theme-lines span:last-child { font-variant-numeric: tabular-nums; }
+    .theme-lines .done { color: var(--mastered); }
+    .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .78rem; color: var(--muted); }
+    .legend i { font-style: normal; }
+    .legend b { font-weight: 400; }
+    .legend .m { color: var(--mastered); }
+    .legend .l { color: var(--learning); }
+
+    /* Diagram dialog */
+    #diagram-dlg { width: min(1100px, calc(100vw - 16px)); }
+    .diagram-view {
+      overflow: auto;
+      max-height: calc(100vh - 170px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--bg);
+      padding: 12px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .diagram-view.fit svg { max-width: 100%; height: auto; }
+    .diagram-view svg { display: block; margin: 0 auto; }
+    .diagram-status { color: var(--muted); font-size: .9rem; padding: 24px; text-align: center; }
+
+    /* ── Toast & celebration ────────────────────────────────────────────── */
+    .toast {
+      position: fixed; left: 50%; bottom: 24px;
+      transform: translate(-50%, 20px);
+      background: var(--text); color: var(--bg);
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: .9rem; font-weight: 600;
+      box-shadow: var(--shadow);
+      opacity: 0; pointer-events: none;
+      transition: opacity .2s, transform .2s;
+      max-width: calc(100vw - 32px);
+      text-align: center;
+      z-index: 10;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast.win { background: var(--mastered); color: var(--surface); }
+    .burst { position: fixed; pointer-events: none; z-index: 9; }
+    .burst i {
+      position: absolute; width: 8px; height: 8px; border-radius: 2px;
+      animation: burst .8s ease-out forwards;
+    }
+    @keyframes burst {
+      from { transform: translate(0,0) rotate(0); opacity: 1; }
+      to   { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity: 0; }
+    }
+
+    @keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .fadein { animation: fadein .25s ease; }
+    @keyframes flash-green { 50% { border-color: var(--mastered); } }
+    @keyframes flash-red   { 50% { border-color: var(--learn); } }
     .flash-correct { animation: flash-green .4s ease; }
-    .flash-wrong   { animation: flash-red   .4s ease; }
+    .flash-wrong   { animation: flash-red .4s ease; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .burst { display: none; }
+    }
+
+    @media (max-width: 560px) {
+      h1 { font-size: 1.55rem; }
+      .card { padding: 20px 18px 18px; gap: 16px; }
+      .question { font-size: 1.45rem; }
+      .answer-box { padding: 14px 14px 14px 14px; font-size: .92rem; }
+      .btn { padding: 12px 12px; }
+      .dlg-body { padding: 22px 20px 20px; }
+      .dlg-title { font-size: 1.7rem; }
+    }
   </style>
 </head>
 <body>
 
-<header>
-  <h1>ML Interview <span>Prep</span></h1>
-  <div class="header-right">
-    <div class="stats">
-      <span class="stat stat-high"  id="stat-high">— high</span>
-      <span class="stat stat-med"   id="stat-med">— med</span>
-      <span class="stat stat-low"   id="stat-low">— low</span>
+<div class="wrap">
+  <header>
+    <h1>ML Interview <em>Prep</em></h1>
+    <div class="top-actions">
+      <span class="streak" id="streak" title="Current streak" aria-label="Current streak: 0">🔥 0</span>
+      <button class="icon-btn" id="progress-btn" aria-label="Your progress" title="Your progress">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      </button>
+      <button class="icon-btn" id="about-btn" aria-label="About this quiz" title="About">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .9c0 1.8-2.5 2.3-2.5 3.9M12 17.2v.1"/></svg>
+      </button>
+      <button class="icon-btn" id="theme-btn" aria-label="Switch colour theme" title="Switch theme">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></svg>
+      </button>
     </div>
-    <button class="reset-btn" onclick="confirmReset()">reset</button>
-  </div>
-</header>
+  </header>
 
-<div class="filters" id="filters"></div>
-
-<div class="card" id="card">
-  <div class="card-meta">
-    <span class="theme-tag"     id="card-theme">—</span>
-    <span class="priority-badge">
-      <span class="priority-dot" id="prio-dot"></span>
-      <span                      id="prio-label">—</span>
-    </span>
+  <div class="stats" aria-label="Deck status">
+    <span class="stat stat-learn"    id="stat-learn">○ — to learn</span>
+    <span class="stat stat-learning" id="stat-learning">◐ — learning</span>
+    <span class="stat stat-mastered" id="stat-mastered">● — mastered</span>
   </div>
 
-  <div class="question fadein" id="question-text">Loading…</div>
-
-  <div class="answer-box hidden fadein" id="answer-box"></div>
-
-  <div id="action-reveal">
-    <button class="btn btn-reveal" onclick="revealAnswer()">Show Answer</button>
+  <div class="filters">
+    <div class="chip-row" id="groups" role="group" aria-label="Topic filters"></div>
+    <div class="theme-panel hidden" id="theme-panel">
+      <div class="chip-row" id="theme-chips" role="group"></div>
+    </div>
   </div>
 
-  <div class="assess-row hidden" id="action-assess">
-    <button class="btn btn-wrong"   onclick="assess(false)">✗ Missed it</button>
-    <button class="btn btn-correct" onclick="assess(true)">✓ Got it</button>
-    <button class="btn btn-skip"    onclick="nextQuestion()">Skip</button>
+  <main class="card" id="card">
+    <div class="card-meta">
+      <div class="card-meta-left">
+        <span class="theme-tag" id="card-theme">—</span>
+        <span class="source-badge hidden" id="source-badge">📋 Asked in real interviews</span>
+      </div>
+      <div class="card-meta-right">
+        <span class="priority-badge" id="prio"><span class="shape" id="prio-shape" aria-hidden="true"></span><span id="prio-label">—</span></span>
+        <button class="link-btn" id="copy-q-btn" aria-label="Copy a link to this question" title="Copy link to this question">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div aria-live="polite">
+      <h2 class="question fadein" id="question-text">Loading…</h2>
+    </div>
+    <p class="reported hidden" id="reported"></p>
+
+    <div class="answer-box hidden" id="answer-box"></div>
+
+    <div id="action-reveal">
+      <button class="btn btn-reveal" id="reveal-btn">Show answer</button>
+    </div>
+    <div class="assess-row hidden" id="action-assess">
+      <button class="btn btn-wrong"   id="wrong-btn">✗ Missed it</button>
+      <button class="btn btn-correct" id="correct-btn">✓ Got it</button>
+      <button class="btn btn-skip"    id="skip-btn">Skip</button>
+    </div>
+    <p class="kbd-hint">
+      <span class="hint-keys"><kbd>Space</kbd> show answer · <kbd>←</kbd> missed · <kbd>→</kbd> got it · <kbd>S</kbd> skip</span>
+      <span class="hint-touch">Tap the card to show the answer, then swipe → got it · ← missed</span>
+    </p>
+  </main>
+
+  <div class="progress-wrap">
+    <div class="progress-track" role="img" id="progress-track" aria-label="Deck progress">
+      <div class="prog-seg seg-mastered" id="prog-mastered" style="width:0%"></div>
+      <div class="prog-seg seg-learning" id="prog-learning" style="width:0%"></div>
+      <div class="prog-seg seg-learn"    id="prog-learn"    style="width:100%"></div>
+    </div>
+    <div class="progress-labels">
+      <span id="session-label">This session: 0 answered</span>
+      <span class="legend"><i><b class="m">●</b> mastered</i><i><b class="l">◐</b> learning</i><i>○ to learn</i></span>
+    </div>
   </div>
+
+  <footer>
+    <span>Built by <a href="https://deveaup.github.io/">Paul Deveau</a></span>
+    <nav aria-label="Project links">
+      <a href="https://github.com/DeveauP/ml_interview_study">★ Star on GitHub</a>
+      <a href="https://github.com/DeveauP/ml_interview_study/issues/new?template=question.yml">Suggest a question</a>
+    </nav>
+  </footer>
 </div>
 
-<div class="progress-wrap">
-  <div class="progress-track">
-    <div class="prog-seg seg-low"    id="prog-low"    style="width:0%"></div>
-    <div class="prog-seg seg-medium" id="prog-medium" style="width:0%"></div>
-    <div class="prog-seg seg-high"   id="prog-high"   style="width:100%"></div>
+<!-- First-visit intro -->
+<dialog id="intro-dlg" aria-labelledby="intro-title">
+  <div class="dlg-body">
+    <div class="dlg-head">
+      <h2 class="dlg-title" id="intro-title">ML Interview Prep</h2>
+      <button class="icon-btn dlg-close" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <p class="lead"><span id="intro-count">74</span> flashcards I built to prepare for my Google DeepMind ML Engineer interviews, which I passed. They go from ML fundamentals to MoE routing and recent frontier models.</p>
+    <ol class="steps">
+      <li>Read the question and answer it out loud, as you would in the interview.</li>
+      <li>Show the answer and grade yourself honestly.</li>
+      <li>Cards you miss come back 10× more often, until you get them right 3 times in a row.</li>
+    </ol>
+    <p class="fine">Your progress stays in this browser. There's no account, and nothing is sent anywhere.</p>
+    <div class="dlg-actions">
+      <button class="btn btn-primary" id="intro-start" data-close autofocus>Start</button>
+      <span class="fine">by <a href="https://deveaup.github.io/">Paul Deveau</a></span>
+    </div>
   </div>
-  <div class="progress-labels">
-    <span id="session-label">Session: 0 answered</span>
-    <span id="streak-label">Streak: 0 🔥</span>
+</dialog>
+
+<!-- Progress -->
+<dialog id="progress-dlg" aria-labelledby="progress-title">
+  <div class="dlg-body">
+    <div class="dlg-head">
+      <h2 class="dlg-title" id="progress-title">Your progress</h2>
+      <button class="icon-btn dlg-close" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <p class="big-number" id="progress-big">0 / 74<small>mastered</small></p>
+    <div class="group-list" id="group-list"></div>
+    <div class="dlg-actions">
+      <button class="btn btn-primary" id="share-btn">Share my progress</button>
+      <button class="btn btn-ghost" id="copy-app-btn">Copy link</button>
+      <button class="btn btn-danger" id="reset-btn">Reset progress</button>
+    </div>
+    <p class="fine" id="share-note">Creates an image of your progress to share on LinkedIn or anywhere else.</p>
   </div>
-</div>
+</dialog>
+
+<!-- Diagram -->
+<dialog id="diagram-dlg" aria-labelledby="diagram-title">
+  <div class="dlg-body">
+    <div class="dlg-head">
+      <h2 class="dlg-title" id="diagram-title">Diagram</h2>
+      <div class="top-actions">
+        <button class="btn btn-ghost" id="fit-btn" aria-pressed="true">Actual size</button>
+        <button class="icon-btn dlg-close" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="chip-row hidden" id="diagram-tabs" role="tablist" aria-label="Diagram views"></div>
+    <div class="diagram-view fit" id="diagram-view" role="tabpanel"></div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="questions.js"></script>
+<script src="diagrams.js"></script>
 <script>
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Config & storage
+// ─────────────────────────────────────────────────────────────────────────────
+const STORAGE_KEY = "ml-quiz-v1";
+const INTRO_KEY   = "ml-quiz-intro-seen";
+const THEME_KEY   = "ml-quiz-theme";
+const APP_URL     = "https://deveaup.github.io/ml_interview_study/";
+const REPO_URL    = "https://github.com/DeveauP/ml_interview_study";
+
+const store = {
+  get(k)    { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+
+const $ = id => document.getElementById(id);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // State
 // ─────────────────────────────────────────────────────────────────────────────
-const STORAGE_KEY = "ml-quiz-v1";
-let progress       = {};   // id → { cc: number }  (cc = consecutiveCorrect)
-let activeThemes   = new Set();
-let currentQ       = null;
+let progress        = {};   // id → { cc: number }  (cc = consecutiveCorrect)
+let activeThemes    = new Set();
+let expandedGroup   = null;
+let currentQ        = null;
+let revealed        = false;
 let sessionAnswered = 0;
 let sessionStreak   = 0;
 
 function loadProgress() {
-  try { progress = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+  try { progress = JSON.parse(store.get(STORAGE_KEY) || "{}") || {}; }
   catch { progress = {}; }
 }
-function saveProgress() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
-}
+function saveProgress() { store.set(STORAGE_KEY, JSON.stringify(progress)); }
 
 function cc(id)   { return progress[id]?.cc ?? 0; }
 function freq(id) { const c = cc(id); return c >= 3 ? "low" : c >= 1 ? "medium" : "high"; }
 function weight(id) { return { high: 10, medium: 3, low: 1 }[freq(id)]; }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Themes & groups
+// ─────────────────────────────────────────────────────────────────────────────
+const ALL_THEMES = [...new Set(QUESTIONS.map(q => q.theme))];
+const GROUPS = (() => {
+  const known  = typeof THEME_GROUPS !== "undefined" ? THEME_GROUPS : [];
+  const groups = known
+    .map(g => ({ ...g, themes: g.themes.filter(t => ALL_THEMES.includes(t)) }))
+    .filter(g => g.themes.length);
+  const listed = new Set(groups.flatMap(g => g.themes));
+  const other  = ALL_THEMES.filter(t => !listed.has(t));
+  if (other.length) groups.push({ id: "other", label: "Other", themes: other });
+  return groups;
+})();
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sampling
@@ -350,85 +709,445 @@ function sampleQuestion(exclude) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Answer rendering
+// Answers are plain text: "•"/"-" bullets (indent = nesting), "1." steps,
+// "→" continuation lines, indented formula lines, and Unicode math with
+// a_b subscripts and ^{…} superscripts.
+// ─────────────────────────────────────────────────────────────────────────────
+const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function inline(s) {
+  return esc(s)
+    .replace(/\^\{([^}]+)\}/g, "<sup>$1</sup>")
+    .replace(/([A-Za-zα-ωΑ-ΩΔ])_([A-Za-z0-9α-ω]+)/g, "$1<sub>$2</sub>");
+}
+
+// Bold a short "Label:" lead-in, e.g. "Why scale: …"
+function withLeadIn(s) {
+  const m = s.match(/^([^:=]{2,48}?):\s+(.+)$/);
+  return m ? `<strong>${inline(m[1])}:</strong> ${inline(m[2])}` : inline(s);
+}
+
+function parseSource(text) {
+  const m = text.match(/^\s*\[Glassdoor confirmed:\s*"?(.*?)"?\]\s*\n?/);
+  return m ? { quote: m[1], rest: text.slice(m[0].length) } : { quote: null, rest: text };
+}
+
+function renderAnswer(text) {
+  const out   = [];
+  const stack = [];   // open lists: { tag, level }
+  const closeTo = level => {
+    while (stack.length && stack[stack.length - 1].level > level) out.push(`</li></${stack.pop().tag}>`);
+  };
+
+  for (const line of text.split("\n")) {
+    if (!line.trim()) continue;
+    const indent = line.match(/^\s*/)[0].length;
+    const item   = line.match(/^\s*(?:([•-])|(\d+)\.)\s+(.*)$/);
+
+    if (item) {
+      const level = indent === 0 ? 0 : indent <= 3 ? 1 : 2;
+      const tag   = item[2] ? "ol" : "ul";
+      closeTo(level);
+      let top = stack[stack.length - 1];
+      if (top && top.level === level && top.tag !== tag) {
+        out.push(`</li></${stack.pop().tag}>`);
+        top = stack[stack.length - 1];
+      }
+      if (!top || top.level < level) {
+        out.push(`<${tag}${item[2] ? ` start="${item[2]}"` : ""}><li>`);
+        stack.push({ tag, level });
+      } else {
+        out.push("</li><li>");
+      }
+      out.push(withLeadIn(item[3]));
+    } else if (indent > 0 || /^\s*→/.test(line)) {
+      const body = line.trim();
+      if (/^→/.test(body))      out.push(`<div class="note">${inline(body)}</div>`);
+      else if (/ = /.test(body)) out.push(`<div class="formula">${inline(body)}</div>`);
+      else                       out.push(`<div class="note">${withLeadIn(body)}</div>`);
+    } else {
+      closeTo(-1);
+      out.push(`<p>${withLeadIn(line)}</p>`);
+    }
+  }
+  closeTo(-1);
+  return out.join("");
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // UI helpers
 // ─────────────────────────────────────────────────────────────────────────────
 const PRIO_STYLE = {
-  high:   { color: "var(--red)",    label: "high priority"   },
-  medium: { color: "var(--orange)", label: "medium priority" },
-  low:    { color: "var(--green)",  label: "mastered"        },
+  high:   { shape: "○", color: "var(--muted)",    label: "to learn" },
+  medium: { shape: "◐", color: "var(--learning)", label: "learning" },
+  low:    { shape: "●", color: "var(--mastered)", label: "mastered" },
 };
 
+function counts(questions = QUESTIONS) {
+  const c = { high: 0, medium: 0, low: 0 };
+  questions.forEach(q => c[freq(q.id)]++);
+  return c;
+}
+
 function updateStats() {
-  const counts = { high: 0, medium: 0, low: 0 };
-  QUESTIONS.forEach(q => counts[freq(q.id)]++);
-  document.getElementById("stat-high").textContent = `${counts.high} high`;
-  document.getElementById("stat-med").textContent  = `${counts.medium} med`;
-  document.getElementById("stat-low").textContent  = `${counts.low} low`;
+  const c = counts();
+  $("stat-learn").textContent    = `○ ${c.high} to learn`;
+  $("stat-learning").textContent = `◐ ${c.medium} learning`;
+  $("stat-mastered").textContent = `● ${c.low} mastered`;
 
   const n = QUESTIONS.length;
-  document.getElementById("prog-low").style.width    = `${counts.low    / n * 100}%`;
-  document.getElementById("prog-medium").style.width = `${counts.medium / n * 100}%`;
-  document.getElementById("prog-high").style.width   = `${counts.high   / n * 100}%`;
+  $("prog-mastered").style.width = `${c.low    / n * 100}%`;
+  $("prog-learning").style.width = `${c.medium / n * 100}%`;
+  $("prog-learn").style.width    = `${c.high   / n * 100}%`;
+  $("progress-track").setAttribute("aria-label",
+    `${c.low} mastered, ${c.medium} learning, ${c.high} to learn`);
+}
+
+function restartAnim(el, cls) {
+  el.classList.remove(cls);
+  void el.offsetWidth;
+  el.classList.add(cls);
 }
 
 function showQuestion(q) {
+  if (!q) return;
   currentQ = q;
-  const f  = freq(q.id);
-  const ps = PRIO_STYLE[f];
+  revealed = false;
+  const ps = PRIO_STYLE[freq(q.id)];
+  const { quote, rest } = parseSource(q.answer);
 
-  document.getElementById("card-theme").textContent    = q.theme;
-  document.getElementById("question-text").textContent = q.question;
-  document.getElementById("answer-box").textContent    = q.answer;
-  document.getElementById("prio-dot").style.background = ps.color;
-  document.getElementById("prio-label").textContent    = ps.label;
+  $("card-theme").textContent = q.theme;
+  $("source-badge").classList.toggle("hidden", !quote);
+  $("reported").classList.toggle("hidden", !quote);
+  $("reported").textContent = quote ? `Reported on Glassdoor as: “${quote}”` : "";
+  $("question-text").innerHTML = inline(q.question);
+  $("prio-shape").textContent = ps.shape;
+  $("prio-shape").style.color = ps.color;
+  $("prio-label").textContent = ps.label;
 
-  document.getElementById("answer-box").classList.add("hidden");
-  document.getElementById("action-reveal").classList.remove("hidden");
-  document.getElementById("action-assess").classList.add("hidden");
+  let html = renderAnswer(rest);
+  if (q.diagram && typeof DIAGRAMS !== "undefined" && DIAGRAMS[q.diagram]) {
+    html += `<button class="diagram-btn" data-diagram="${esc(q.diagram)}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="6" rx="1"/><rect x="14" y="15" width="7" height="6" rx="1"/><path d="M6.5 9v4a2 2 0 0 0 2 2H14"/></svg>
+      View ${esc(DIAGRAMS[q.diagram].title.toLowerCase())} diagram</button>`;
+  }
+  const box = $("answer-box");
+  box.innerHTML = html;
+  box.classList.add("hidden");
+  $("action-reveal").classList.remove("hidden");
+  $("action-assess").classList.add("hidden");
 
-  // Restart fadein animation
-  const qt = document.getElementById("question-text");
-  qt.classList.remove("fadein");
-  void qt.offsetWidth;
-  qt.classList.add("fadein");
+  restartAnim($("question-text"), "fadein");
 }
 
 function revealAnswer() {
-  const box = document.getElementById("answer-box");
+  if (!currentQ || revealed) return;
+  revealed = true;
+  const box = $("answer-box");
   box.classList.remove("hidden");
-  box.classList.remove("fadein");
-  void box.offsetWidth;
-  box.classList.add("fadein");
-  document.getElementById("action-reveal").classList.add("hidden");
-  document.getElementById("action-assess").classList.remove("hidden");
+  restartAnim(box, "fadein");
+  $("action-reveal").classList.add("hidden");
+  $("action-assess").classList.remove("hidden");
+  if (document.activeElement === $("reveal-btn")) $("correct-btn").focus({ preventScroll: true });
 }
 
 function assess(correct) {
-  if (!currentQ) return;
-  const id  = currentQ.id;
-  const prev = progress[id]?.cc ?? 0;
-  progress[id] = { cc: correct ? prev + 1 : 0 };
+  if (!currentQ || !revealed) return;
+  const q    = currentQ;
+  const prev = cc(q.id);
+  progress[q.id] = { cc: correct ? prev + 1 : 0 };
 
   sessionAnswered++;
   sessionStreak = correct ? sessionStreak + 1 : 0;
   saveProgress();
   updateStats();
 
-  document.getElementById("session-label").textContent = `Session: ${sessionAnswered} answered`;
-  document.getElementById("streak-label").textContent  = `Streak: ${sessionStreak} 🔥`;
+  $("session-label").textContent = `This session: ${sessionAnswered} answered`;
+  const streak = $("streak");
+  streak.textContent = `🔥 ${sessionStreak}`;
+  streak.setAttribute("aria-label", `Current streak: ${sessionStreak}`);
+  if (correct) restartAnim(streak, "bump");
 
-  // Flash card border
-  const card = document.getElementById("card");
-  card.classList.remove("flash-correct", "flash-wrong");
-  void card.offsetWidth;
-  card.classList.add(correct ? "flash-correct" : "flash-wrong");
+  restartAnim($("card"), correct ? "flash-correct" : "flash-wrong");
 
+  const hadFocus = $("action-assess").contains(document.activeElement);
+  if (correct && prev === 2) celebrate(q);
   nextQuestion();
+  if (hadFocus) $("reveal-btn").focus({ preventScroll: true });
 }
 
 function nextQuestion() {
-  const next = sampleQuestion(currentQ?.id);
-  if (next) showQuestion(next);
+  showQuestion(sampleQuestion(currentQ?.id));
+}
+
+function celebrate(q) {
+  const c = counts();
+  if (c.low === QUESTIONS.length) toast("🎉 Every card mastered. You're ready.", true);
+  else                            toast(`● Mastered: ${q.theme}`, true);
+  burst();
+}
+
+function burst() {
+  const card  = $("card").getBoundingClientRect();
+  const layer = document.createElement("div");
+  layer.className = "burst";
+  layer.style.left = `${card.left + card.width / 2}px`;
+  layer.style.top  = `${card.top + 40}px`;
+  const colors = ["var(--mastered)", "var(--accent)", "var(--learning)"];
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement("i");
+    const a = (Math.PI * 2 * i) / 18;
+    const d = 60 + Math.random() * 60;
+    p.style.setProperty("--dx", `${Math.cos(a) * d}px`);
+    p.style.setProperty("--dy", `${Math.sin(a) * d - 30}px`);
+    p.style.setProperty("--rot", `${Math.random() * 360}deg`);
+    p.style.background = colors[i % colors.length];
+    layer.appendChild(p);
+  }
+  document.body.appendChild(layer);
+  setTimeout(() => layer.remove(), 900);
+}
+
+let toastTimer;
+function toast(msg, win = false) {
+  const t = $("toast");
+  // Modal dialogs sit in the top layer, so host the toast inside one if open.
+  const host = document.querySelector("dialog[open]") || document.body;
+  if (t.parentElement !== host) host.appendChild(t);
+  t.textContent = msg;
+  t.classList.toggle("win", win);
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+function baseUrl() {
+  return location.protocol.startsWith("http") ? location.origin + location.pathname.replace(/index\.html$/, "") : APP_URL;
+}
+
+async function copyText(text, msg) {
+  try { await navigator.clipboard.writeText(text); toast(msg); }
+  catch { prompt("Copy this link:", text); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Filters
+// ─────────────────────────────────────────────────────────────────────────────
+function chip(label, { pressed, expanded, count, onClick }) {
+  const b = document.createElement("button");
+  b.className = "chip";
+  b.textContent = label;
+  if (pressed !== undefined)  b.setAttribute("aria-pressed", String(pressed));
+  if (expanded !== undefined) {
+    b.setAttribute("aria-expanded", String(expanded));
+    b.setAttribute("aria-controls", "theme-panel");
+  }
+  if (count) {
+    const n = document.createElement("span");
+    n.className = "count";
+    n.textContent = count;
+    n.setAttribute("aria-label", `${count} selected`);
+    b.appendChild(n);
+  }
+  if (expanded !== undefined) {
+    b.insertAdjacentHTML("beforeend",
+      '<svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 3.5L5 7l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>');
+  }
+  b.onclick = onClick;
+  return b;
+}
+
+function renderFilters() {
+  // Chips are rebuilt on every change; keep keyboard focus on the same one.
+  const focused = document.activeElement?.closest?.(".chip")?.firstChild?.textContent;
+  buildFilterChips();
+  if (focused) [...document.querySelectorAll(".chip")].find(c => c.firstChild.textContent === focused)?.focus();
+}
+
+function buildFilterChips() {
+  const groupsEl = $("groups");
+  groupsEl.replaceChildren();
+  groupsEl.appendChild(chip("All topics", {
+    pressed: activeThemes.size === 0,
+    onClick: () => { activeThemes.clear(); expandedGroup = null; filtersChanged(); },
+  }));
+  GROUPS.forEach(g => {
+    const n = g.themes.filter(t => activeThemes.has(t)).length;
+    groupsEl.appendChild(chip(g.label, {
+      expanded: expandedGroup === g.id,
+      count: n,
+      onClick: () => { expandedGroup = expandedGroup === g.id ? null : g.id; renderFilters(); },
+    }));
+  });
+
+  const panel = $("theme-panel");
+  const group = GROUPS.find(g => g.id === expandedGroup);
+  panel.classList.toggle("hidden", !group);
+  const chips = $("theme-chips");
+  chips.replaceChildren();
+  if (!group) return;
+  chips.setAttribute("aria-label", `${group.label} topics`);
+
+  const allOn = group.themes.every(t => activeThemes.has(t));
+  chips.appendChild(chip(`All of ${group.label}`, {
+    pressed: allOn,
+    onClick: () => {
+      group.themes.forEach(t => allOn ? activeThemes.delete(t) : activeThemes.add(t));
+      filtersChanged();
+    },
+  }));
+  group.themes.forEach(t => {
+    const n = QUESTIONS.filter(q => q.theme === t).length;
+    chips.appendChild(chip(`${t} · ${n}`, {
+      pressed: activeThemes.has(t),
+      onClick: () => {
+        activeThemes.has(t) ? activeThemes.delete(t) : activeThemes.add(t);
+        filtersChanged();
+      },
+    }));
+  });
+}
+
+function filtersChanged() {
+  renderFilters();
+  if (!currentQ || (activeThemes.size && !activeThemes.has(currentQ.theme))) {
+    showQuestion(sampleQuestion(currentQ?.id));
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Progress dialog & share image
+// ─────────────────────────────────────────────────────────────────────────────
+function segBar(c, total) {
+  const pct = v => `${v / total * 100}%`;
+  return `<div class="progress-track" role="img" aria-label="${c.low} mastered, ${c.medium} learning, ${c.high} to learn">
+    <div class="prog-seg seg-mastered" style="width:${pct(c.low)}"></div>
+    <div class="prog-seg seg-learning" style="width:${pct(c.medium)}"></div>
+    <div class="prog-seg seg-learn" style="width:${pct(c.high)}"></div></div>`;
+}
+
+function openProgress() {
+  const all = counts();
+  $("progress-big").innerHTML = `${all.low} / ${QUESTIONS.length}<small>mastered</small>`;
+  $("group-list").innerHTML = GROUPS.map(g => {
+    const qs = QUESTIONS.filter(q => g.themes.includes(q.theme));
+    const c  = counts(qs);
+    const lines = g.themes.map(t => {
+      const tq = qs.filter(q => q.theme === t);
+      const m  = counts(tq).low;
+      return `<div${m === tq.length ? ' class="done"' : ""}><span>${esc(t)}</span><span>${m}/${tq.length}${m === tq.length ? " ✓" : ""}</span></div>`;
+    }).join("");
+    return `<section class="group-row"><h3>${esc(g.label)} <span>${c.low}/${qs.length}</span></h3>
+      ${segBar(c, qs.length)}<div class="theme-lines">${lines}</div></section>`;
+  }).join("") + `<div class="legend"><i><b class="m">●</b> mastered</i><i><b class="l">◐</b> learning</i><i>○ to learn</i></div>`;
+  $("progress-dlg").showModal();
+}
+
+async function drawShareCard() {
+  const W = 1200, H = 627;
+  const cv = document.createElement("canvas");
+  cv.width = W; cv.height = H;
+  const x = cv.getContext("2d");
+  try {
+    await Promise.all([
+      document.fonts.load('120px "Instrument Serif"'),
+      document.fonts.load('600 26px Inter'),
+      document.fonts.load('400 26px Inter'),
+    ]);
+  } catch {}
+  const sans  = 'Inter, system-ui, sans-serif';
+  const serif = '"Instrument Serif", Georgia, serif';
+  const C = { bg: "#f7f5f0", text: "#1c1b18", muted: "#6a665c", line: "#e2ddd2",
+              accent: "#2a52be", mastered: "#15803d", learning: "#b45309" };
+
+  x.fillStyle = C.bg; x.fillRect(0, 0, W, H);
+  x.fillStyle = C.accent; x.fillRect(0, 0, W, 10);
+
+  const all = counts();
+  x.fillStyle = C.accent;
+  x.font = `600 24px ${sans}`;
+  x.fillText("ML INTERVIEW PREP", 80, 110);
+
+  x.fillStyle = C.text;
+  x.font = `150px ${serif}`;
+  const big = `${all.low}`;
+  x.fillText(big, 76, 290);
+  const bw = x.measureText(big).width;
+  x.font = `56px ${serif}`;
+  x.fillStyle = C.muted;
+  x.fillText(`/ ${QUESTIONS.length}`, 76 + bw + 16, 290);
+  x.fillStyle = C.text;
+  x.font = `400 30px ${sans}`;
+  x.fillText("flashcards mastered", 80, 345);
+
+  x.fillStyle = C.muted;
+  x.font = `400 22px ${sans}`;
+  ["Fundamentals, transformers, MoE, alignment", "and recent frontier models"].forEach((l, i) =>
+    x.fillText(l, 80, 410 + i * 32));
+
+  // Per-group bars
+  const gx = 640, gw = 480;
+  let gy = 150;
+  const step = Math.min(96, 340 / GROUPS.length);
+  GROUPS.forEach(g => {
+    const qs = QUESTIONS.filter(q => g.themes.includes(q.theme));
+    const c  = counts(qs);
+    x.fillStyle = C.text;
+    x.font = `600 24px ${sans}`;
+    x.fillText(g.label, gx, gy);
+    x.fillStyle = C.muted;
+    x.font = `400 22px ${sans}`;
+    const lbl = `${c.low}/${qs.length}`;
+    x.fillText(lbl, gx + gw - x.measureText(lbl).width, gy);
+    const by = gy + 18, bh = 14;
+    x.fillStyle = C.line; roundRect(x, gx, by, gw, bh, 7); x.fill();
+    const wm = gw * c.low / qs.length, wl = gw * c.medium / qs.length;
+    x.save(); roundRect(x, gx, by, gw, bh, 7); x.clip();
+    x.fillStyle = C.mastered; x.fillRect(gx, by, wm, bh);
+    x.fillStyle = C.learning; x.fillRect(gx + wm, by, wl, bh);
+    x.restore();
+    gy += step;
+  });
+
+  x.fillStyle = C.line; x.fillRect(80, 530, W - 160, 1);
+  x.fillStyle = C.text;
+  x.font = `600 22px ${sans}`;
+  x.fillText(APP_URL.replace(/^https:\/\//, "").replace(/\/$/, ""), 80, 575);
+  x.fillStyle = C.muted;
+  x.font = `400 22px ${sans}`;
+  const by = "Built by Paul Deveau";
+  x.fillText(by, W - 80 - x.measureText(by).width, 575);
+
+  return new Promise(res => cv.toBlob(res, "image/png"));
+}
+
+function roundRect(x, px, py, w, h, r) {
+  x.beginPath();
+  x.moveTo(px + r, py);
+  x.arcTo(px + w, py, px + w, py + h, r);
+  x.arcTo(px + w, py + h, px, py + h, r);
+  x.arcTo(px, py + h, px, py, r);
+  x.arcTo(px, py, px + w, py, r);
+  x.closePath();
+}
+
+async function shareProgress() {
+  const blob = await drawShareCard();
+  if (!blob) return toast("Couldn't create the image");
+  const file = new File([blob], "ml-interview-progress.png", { type: "image/png" });
+  const text = `I've mastered ${counts().low} of ${QUESTIONS.length} ML interview flashcards. Try it: ${APP_URL}`;
+  if (navigator.canShare?.({ files: [file] })) {
+    try { await navigator.share({ files: [file], text }); return; }
+    catch (e) { if (e.name === "AbortError") return; }
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = file.name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  try { await navigator.clipboard.writeText(text); } catch {}
+  toast("Image downloaded, caption copied");
 }
 
 function confirmReset() {
@@ -437,59 +1156,245 @@ function confirmReset() {
     saveProgress();
     sessionAnswered = 0;
     sessionStreak   = 0;
-    document.getElementById("session-label").textContent = "Session: 0 answered";
-    document.getElementById("streak-label").textContent  = "Streak: 0 🔥";
+    $("session-label").textContent = "This session: 0 answered";
+    $("streak").textContent = "🔥 0";
     updateStats();
     showQuestion(sampleQuestion(null));
+    $("progress-dlg").close();
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Theme filters
+// Diagram (Mermaid, loaded on demand)
 // ─────────────────────────────────────────────────────────────────────────────
-function buildFilters() {
-  const themes    = [...new Set(QUESTIONS.map(q => q.theme))];
-  const container = document.getElementById("filters");
+let mermaidLib = null;
 
-  const allBtn = document.createElement("button");
-  allBtn.className   = "filter-btn active";
-  allBtn.textContent = "All";
-  allBtn.onclick     = () => {
-    activeThemes.clear();
-    container.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-    allBtn.classList.add("active");
-    showQuestion(sampleQuestion(currentQ?.id));
-  };
-  container.appendChild(allBtn);
+function effectiveTheme() {
+  const t = document.documentElement.dataset.theme;
+  if (t) return t;
+  return matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
 
-  themes.forEach(theme => {
-    const btn        = document.createElement("button");
-    btn.className    = "filter-btn";
-    btn.textContent  = theme;
-    btn.onclick      = () => {
-      if (activeThemes.has(theme)) {
-        activeThemes.delete(theme);
-        btn.classList.remove("active");
-      } else {
-        activeThemes.add(theme);
-        btn.classList.add("active");
-        allBtn.classList.remove("active");
-      }
-      if (activeThemes.size === 0) allBtn.classList.add("active");
-      const next = sampleQuestion(currentQ?.id);
-      if (next) showQuestion(next);
-    };
-    container.appendChild(btn);
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+const DIAGRAM_CLASSES = {
+  light: {
+    attn: "fill:#efe9fb,stroke:#6d4bb8,color:#1c1b18",
+    ffn:  "fill:#e2f1f3,stroke:#1d7f8c,color:#1c1b18",
+    norm: "fill:#e3f4e8,stroke:#15803d,color:#1c1b18",
+    add:  "fill:#fdf0e1,stroke:#b45309,color:#1c1b18",
+    io:   "fill:#efece4,stroke:#6a665c,color:#1c1b18",
+  },
+  dark: {
+    attn: "fill:#2c2342,stroke:#b39dff,color:#ece8de",
+    ffn:  "fill:#17313a,stroke:#5cc8d6,color:#ece8de",
+    norm: "fill:#1c3324,stroke:#4ade80,color:#ece8de",
+    add:  "fill:#3a2c14,stroke:#f59e0b,color:#ece8de",
+    io:   "fill:#26241f,stroke:#a29d90,color:#ece8de",
+  },
+};
+
+let diagramKey = null;
+
+function openDiagram(key) {
+  const d = DIAGRAMS[key];
+  diagramKey = key;
+  $("diagram-title").textContent = d.title;
+  const tabs = $("diagram-tabs");
+  tabs.classList.toggle("hidden", d.views.length < 2);
+  tabs.replaceChildren(...d.views.map((v, i) => {
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.textContent = v.label;
+    b.setAttribute("role", "tab");
+    b.onclick = () => renderDiagramView(i);
+    return b;
+  }));
+  $("diagram-dlg").showModal();
+  renderDiagramView(0);
+}
+
+async function renderDiagramView(index) {
+  const d    = DIAGRAMS[diagramKey];
+  const view = $("diagram-view");
+  [...$("diagram-tabs").children].forEach((b, i) => {
+    b.setAttribute("aria-selected", String(i === index));
+    b.setAttribute("aria-pressed", String(i === index));
   });
+  view.innerHTML = '<p class="diagram-status">Loading diagram…</p>';
+  try {
+    mermaidLib ??= (await import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs")).default;
+    const theme = effectiveTheme();
+    mermaidLib.initialize({
+      startOnLoad: false,
+      securityLevel: "strict",
+      theme: "base",
+      fontFamily: "Inter, system-ui, sans-serif",
+      flowchart: { useMaxWidth: false, htmlLabels: true },
+      themeVariables: {
+        fontFamily: "Inter, system-ui, sans-serif",
+        background: cssVar("--bg"),
+        primaryColor: cssVar("--surface"),
+        primaryTextColor: cssVar("--text"),
+        primaryBorderColor: cssVar("--muted"),
+        lineColor: cssVar("--muted"),
+        clusterBkg: cssVar("--surface"),
+        clusterBorder: cssVar("--line"),
+        titleColor: cssVar("--muted"),
+        edgeLabelBackground: cssVar("--bg"),
+      },
+    });
+    const defs = Object.entries(DIAGRAM_CLASSES[theme]).map(([k, v]) => `    classDef ${k} ${v}`).join("\n");
+    const [head, ...body] = d.views[index].source.replace(/\\n/g, "<br>").split("\n");
+    const { svg } = await mermaidLib.render(`mmd-${Date.now()}`, [head, defs, ...body].join("\n"));
+    view.innerHTML = svg;
+  } catch (e) {
+    console.error(e);
+    view.innerHTML = `<p class="diagram-status">Couldn't load the diagram (it needs an internet connection).<br>
+      <a href="${REPO_URL}/blob/main/transformer_diagram.md">View it on GitHub</a></p>`;
+  }
+}
+
+function toggleFit() {
+  const view = $("diagram-view");
+  const fit  = view.classList.toggle("fit");
+  $("fit-btn").textContent = fit ? "Actual size" : "Fit to screen";
+  $("fit-btn").setAttribute("aria-pressed", String(fit));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Init
+// Theme toggle
 // ─────────────────────────────────────────────────────────────────────────────
+const ICON_SUN  = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+const ICON_MOON = '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>';
+
+function renderThemeIcon() {
+  const dark = effectiveTheme() === "dark";
+  $("theme-icon").innerHTML = dark ? ICON_SUN : ICON_MOON;
+  $("theme-btn").setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
+}
+
+function toggleTheme() {
+  const next = effectiveTheme() === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  store.set(THEME_KEY, next);
+  renderThemeIcon();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Keyboard & swipe
+// ─────────────────────────────────────────────────────────────────────────────
+function anyDialogOpen() { return !!document.querySelector("dialog[open]"); }
+
+document.addEventListener("keydown", e => {
+  if (anyDialogOpen() || e.ctrlKey || e.metaKey || e.altKey) return;
+  const onButton = e.target.closest?.("button, a");
+  const k = e.key;
+  if ((k === " " || k === "Enter") && !revealed) {
+    if (onButton && onButton.id !== "reveal-btn") return;
+    e.preventDefault();
+    revealAnswer();
+  } else if ((k === "ArrowRight" || k === "2") && revealed) {
+    e.preventDefault(); assess(true);
+  } else if ((k === "ArrowLeft" || k === "1") && revealed) {
+    e.preventDefault(); assess(false);
+  } else if (k === "s" || k === "S" || k === "ArrowDown") {
+    e.preventDefault(); nextQuestion();
+  }
+});
+
+(() => {
+  const card = $("card");
+  let start = null;
+  const THRESHOLD = 90;
+
+  card.addEventListener("pointerdown", e => {
+    if (e.pointerType === "mouse" || e.target.closest("button, a")) return;
+    start = { x: e.clientX, y: e.clientY, id: e.pointerId, moved: false };
+  });
+  card.addEventListener("pointermove", e => {
+    if (!start || e.pointerId !== start.id || !revealed) return;
+    const dx = e.clientX - start.x, dy = e.clientY - start.y;
+    if (!start.moved && Math.abs(dx) < 12) return;
+    if (!start.moved && Math.abs(dy) > Math.abs(dx)) { start = null; return; }  // vertical scroll
+    start.moved = true;
+    card.classList.add("dragging");
+    card.style.transform = `translateX(${dx}px) rotate(${dx / 40}deg)`;
+    card.classList.toggle("swipe-right", dx > THRESHOLD / 2);
+    card.classList.toggle("swipe-left",  dx < -THRESHOLD / 2);
+  });
+  const end = e => {
+    if (!start || e.pointerId !== start.id) return;
+    const dx = e.clientX - start.x;
+    const wasTap = !start.moved && Math.abs(dx) < 12 && Math.abs(e.clientY - start.y) < 12;
+    start = null;
+    card.classList.remove("dragging", "swipe-right", "swipe-left");
+    card.classList.add("snap");
+    card.style.transform = "";
+    setTimeout(() => card.classList.remove("snap"), 220);
+    if (e.type === "pointercancel") return;
+    if (wasTap && !revealed) revealAnswer();
+    else if (Math.abs(dx) >= THRESHOLD && revealed) assess(dx > 0);
+  };
+  card.addEventListener("pointerup", end);
+  card.addEventListener("pointercancel", end);
+})();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Wiring & init
+// ─────────────────────────────────────────────────────────────────────────────
+$("reveal-btn").onclick  = revealAnswer;
+$("correct-btn").onclick = () => assess(true);
+$("wrong-btn").onclick   = () => assess(false);
+$("skip-btn").onclick    = nextQuestion;
+$("progress-btn").onclick = openProgress;
+$("about-btn").onclick   = () => $("intro-dlg").showModal();
+$("theme-btn").onclick   = toggleTheme;
+$("share-btn").onclick   = shareProgress;
+$("reset-btn").onclick   = confirmReset;
+$("fit-btn").onclick     = toggleFit;
+$("copy-app-btn").onclick = () => copyText(baseUrl(), "Link copied");
+$("copy-q-btn").onclick  = () => copyText(`${baseUrl()}?q=${encodeURIComponent(currentQ.id)}`, "Link to this question copied");
+$("answer-box").addEventListener("click", e => {
+  const b = e.target.closest("[data-diagram]");
+  if (b) openDiagram(b.dataset.diagram);
+});
+document.querySelectorAll("dialog").forEach(d => {
+  d.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => d.close()));
+  d.addEventListener("click", e => { if (e.target === d) d.close(); });   // click on backdrop
+});
+$("intro-dlg").addEventListener("close", () => store.set(INTRO_KEY, "1"));
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", renderThemeIcon);
+
+// Deep links: ?q=<id> opens one question; ?theme=<slug> or ?group=<id> preselects filters.
+function applyDeepLink() {
+  const params = new URLSearchParams(location.search);
+  const theme  = params.get("theme");
+  const group  = params.get("group");
+  if (theme) {
+    const t = ALL_THEMES.find(t => slug(t) === slug(theme));
+    if (t) { activeThemes.add(t); expandedGroup = GROUPS.find(g => g.themes.includes(t))?.id ?? null; }
+  }
+  if (group) {
+    const g = GROUPS.find(g => g.id === group || slug(g.label) === slug(group));
+    if (g) { g.themes.forEach(t => activeThemes.add(t)); expandedGroup = g.id; }
+  }
+  return QUESTIONS.find(q => q.id === params.get("q")) || null;
+}
+
 loadProgress();
-buildFilters();
+const linked = applyDeepLink();
+renderFilters();
 updateStats();
-showQuestion(sampleQuestion(null));
+renderThemeIcon();
+showQuestion(linked || sampleQuestion(null));
+$("intro-count").textContent = QUESTIONS.length;
+if (!store.get(INTRO_KEY)) {
+  if (linked) $("intro-start").textContent = "Start with this question";
+  $("intro-dlg").showModal();
+}
 </script>
 </body>
 </html>

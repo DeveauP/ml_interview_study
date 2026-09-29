@@ -4,6 +4,7 @@ const QUESTIONS = [
     id: "tf-1",
     theme: "Transformer Architecture",
     question: "Explain the Transformer architecture end-to-end.",
+    diagram: "transformer",
     answer:
 `[Glassdoor confirmed: "Explain transformers in the context of LLMs"]
 
@@ -907,4 +908,18 @@ const QUESTIONS = [
 • Remaining challenge: MoE models require full parameter load in memory for routing even when most are inactive — memory cost is dense-model-like despite sparse compute
 • Implication for DeepMind: Gemini 1.5/2.0 and Gemma 4 all use MoE; understanding MoE tradeoffs (load balancing, routing collapse, memory vs compute) is directly relevant`
   },
+];
+
+// Filter groups shown in the app. A theme not listed here lands in "Other".
+const THEME_GROUPS = [
+  { id: "foundations", label: "Foundations",
+    themes: ["ML Fundamentals", "Optimization", "Regularization", "Normalization", "Evaluation"] },
+  { id: "transformers", label: "Transformers & Attention",
+    themes: ["Transformer Architecture", "Attention & Efficiency", "MoE Architecture",
+             "Architecture: Dense vs. MoE", "Inference & Decoding"] },
+  { id: "training", label: "Training & Alignment",
+    themes: ["LLM Training Pipeline", "Alignment & RLHF"] },
+  { id: "frontier", label: "Frontier Models",
+    themes: ["DeepSeek V3 / R1", "Gemma 3", "Gemma 4", "Kimi K2 / K2.5", "Llama 4",
+             "Frontier Model Comparison"] },
 ];

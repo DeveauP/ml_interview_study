@@ -1,0 +1,39 @@
+name: Suggest a question
+description: Propose a new flashcard, ideally one you were asked in a real interview.
+title: "[Question] "
+labels: ["question-suggestion"]
+body:
+  - type: input
+    id: theme
+    attributes:
+      label: Theme
+      description: An existing theme (e.g. "MoE Architecture") or a new one.
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+    validations:
+      required: true
+  - type: textarea
+    id: answer
+    attributes:
+      label: Suggested answer
+      description: Short bullets are best. Use "•" for bullets and plain Unicode for maths.
+  - type: dropdown
+    id: source
+    attributes:
+      label: Where does it come from?
+      options:
+        - I was asked this in an interview
+        - Reported online (Glassdoor, blog, forum)
+        - From a paper or tech report
+        - My own idea
+    validations:
+      required: true
+  - type: input
+    id: link
+    attributes:
+      label: Reference (optional)
+      description: Paper, tech report or post that backs up the answer.
